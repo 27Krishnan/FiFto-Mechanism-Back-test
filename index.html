@@ -129,8 +129,8 @@
         /* Stats Dashboard */
         .stats-dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
             margin-bottom: 30px;
         }
 
@@ -273,6 +273,187 @@
         .clickable-row:hover {
             background-color: var(--surface-hover);
         }
+
+        /* Premium File Chip Styles */
+        .file-chip {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-chip::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+
+        .file-chip:hover::before {
+            transform: translateX(100%);
+        }
+
+        .file-chip:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15), 0 0 0 1px rgba(56, 189, 248, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .file-chip.hidden {
+            background: rgba(15, 23, 42, 0.6);
+            opacity: 0.5;
+            border-color: transparent;
+            box-shadow: none;
+            filter: grayscale(1);
+        }
+
+        .file-chip.hidden:hover {
+            opacity: 0.8;
+            border-color: rgba(148, 163, 184, 0.2);
+            filter: grayscale(0.5);
+        }
+
+        .chip-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.01em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .chip-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 10px;
+            margin-left: 2px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chip-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .chip-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .chip-btn.show {
+            color: #38bdf8;
+        }
+
+        .chip-btn.hide {
+            color: #64748b;
+        }
+
+        .chip-btn.delete {
+            color: #ef4444;
+            opacity: 0.7;
+        }
+
+        .chip-btn.delete:hover {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .chip-input-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.2s;
+        }
+
+        .chip-input-group:focus-within {
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .chip-input {
+            width: 40px;
+            background: transparent;
+            border: none;
+            color: #38bdf8;
+            font-weight: 700;
+            outline: none;
+            font-size: 0.95em;
+            text-align: right;
+            font-family: 'Inter', monospace;
+
+        }
+
+        /* Chrome, Safari, Edge, Opera */
+        .chip-input::-webkit-outer-spin-button,
+        .chip-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        .chip-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .spinner-btns {
+            display: flex;
+            flex-direction: column;
+            margin-left: 2px;
+        }
+
+        .spin-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0 4px;
+            font-size: 0.6em;
+            /* Tiny arrows */
+            height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .spin-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-color);
+        }
+
+        .spin-btn.up {
+            border-radius: 2px 2px 0 0;
+            margin-bottom: 1px;
+        }
+
+        .spin-btn.down {
+            border-radius: 0 0 2px 2px;
+        }
     </style>
 </head>
 
@@ -281,17 +462,56 @@
     <div class="container">
         <header>
             <h1 id="reportTitle">FiFto Backtest report</h1>
-            <div id="fileControls" class="controls">
-                <div id="fileControlsList"
-                    style="display: flex; gap: 15px; overflow-x: auto; align-items: center; margin-right: 15px; max-width: 60%; padding-bottom: 2px;">
-                    <!-- Dynamic File Controls Injected Here -->
-                    <span style="font-size: 0.8em; color: var(--text-secondary);">Upload files to see controls</span>
-                </div>
-                <input type="file" id="csvFileInput" accept=".csv, .xlsx, .xls, .json" multiple>
-                <button id="exportBtn" onclick="exportPortfolio()" class="primary-btn" style="display: none;">Export
-                    JSON</button>
+            <div class="controls" style="border:none; background:transparent; padding:0;">
+                <button class="primary-btn" onclick="document.getElementById('csvFileInput').click()"
+                    style="display:flex; align-items:center; gap:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Upload New Report
+                </button>
+                <input type="file" id="csvFileInput" multiple style="display:none" accept=".csv, .xlsx, .xls, .json">
+                <input type="file" id="mergeFileInput" multiple style="display:none" accept=".csv, .xlsx, .xls, .json">
+                <button id="exportBtn" onclick="exportPortfolio()" class="primary-btn"
+                    style="display: none; background: #334155; color: #f8fafc;">Export JSON</button>
             </div>
         </header>
+
+        <!-- Active Files Panel (New Design) -->
+        <div id="activeFilesPanel"
+            style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 25px; display:none;">
+            <div
+                style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 10px; font-weight: 600;">
+                Active Data Sources & Multipliers
+            </div>
+            <div id="fileControlsList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <!-- items injected here -->
+            </div>
+
+            <!-- Date Range Filter -->
+            <div
+                style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 25px; display:flex; gap:20px; align-items:center;">
+                <div
+                    style="font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #e2e8f0; font-weight: 700;">
+                    Date Filter
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label style="font-size:0.95em; color:#cbd5e1; font-weight:500;">Start:</label>
+                    <input type="date" id="startDateInput" onchange="applyFilters()"
+                        style="background:#1e293b; border:1px solid #475569; color:#f8fafc; padding:6px 10px; border-radius:6px; outline:none; font-family:inherit;">
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label style="font-size:0.95em; color:#cbd5e1; font-weight:500;">End:</label>
+                    <input type="date" id="endDateInput" onchange="applyFilters()"
+                        style="background:#1e293b; border:1px solid #475569; color:#f8fafc; padding:6px 10px; border-radius:6px; outline:none; font-family:inherit;">
+                </div>
+                <button onclick="clearDateFilters()"
+                    style="background:#334155; border:1px solid #475569; color:#f8fafc; padding:6px 16px; border-radius:6px; cursor:pointer; font-size:0.85em; font-weight:600; transition:all 0.2s;">Clear</button>
+            </div>
+        </div>
 
         <!-- Tab Navigation -->
         <nav class="tab-nav">
@@ -330,6 +550,15 @@
                     </div>
                 </div>
 
+                <!-- Card: Yearly Overview (New) -->
+                <div class="stats-card">
+                    <div class="stats-card-title">Yearly Overview</div>
+                    <div class="stats-card-value" style="font-size:1.1em; display:flex; flex-direction:column; gap:4px;"
+                        id="yearlyStatsList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
                 <!-- Card 3: Averages -->
                 <div class="stats-card">
                     <div class="stats-card-title">Average Trade</div>
@@ -339,6 +568,18 @@
                     </div>
                     <div class="stats-card-sub" style="margin-top: 5px;">
                         <span>Avg Loss: <span id="avgLoser" class="text-red">--</span></span>
+                    </div>
+                </div>
+
+                <!-- Card: Risk Reward Ratio (New) -->
+                <div class="stats-card">
+                    <div class="stats-card-title">Risk : Reward</div>
+                    <div class="stats-card-value" id="rrRatio">--</div>
+                    <div class="stats-card-sub">
+                        <span>Avg Win: <span id="rrAvgWin" class="text-green">--</span></span>
+                    </div>
+                    <div class="stats-card-sub" style="margin-top: 5px;">
+                        <span>Avg Loss: <span id="rrAvgLoss" class="text-red">--</span></span>
                     </div>
                 </div>
 
@@ -397,6 +638,27 @@
                     <div class="stats-card-value" id="runupTargetResult" style="font-size: 1.2em;">-- / --</div>
                     <div class="stats-card-sub" id="runupTargetPercent" style="color: var(--accent-color);">
                         --%
+                    </div>
+                </div>
+
+                <!-- Card 8: Biggest Wins -->
+                <div class="stats-card">
+                    <div class="stats-card-title">Biggest Wins</div>
+                    <div class="stats-card-value text-green" id="maxSingleProfitDisplay" style="font-size: 1.5em;">--
+                    </div>
+                    <div class="stats-card-sub" style="flex-direction: column; align-items: flex-start; gap: 4px;"
+                        id="top3WinsList">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Card 9: Biggest Losses -->
+                <div class="stats-card">
+                    <div class="stats-card-title">Biggest Losses</div>
+                    <div class="stats-card-value text-red" id="maxSingleLossDisplay" style="font-size: 1.5em;">--</div>
+                    <div class="stats-card-sub" style="flex-direction: column; align-items: flex-start; gap: 4px;"
+                        id="top3LossesList">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
             </div>
@@ -461,6 +723,23 @@
             </div>
         </div>
 
+        <!-- Pie Charts Section -->
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom:20px;">
+            <div class="glass-panel">
+                <div class="section-title">Win / Loss Ratio</div>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="pieWinLoss"></canvas>
+                </div>
+            </div>
+            <div class="glass-panel">
+                <div class="section-title">Trade Distribution by File</div>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="pieFileDist"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- TAB 3: HISTORY -->
         <div id="tab-history" class="tab-content">
             <div class="glass-panel">
@@ -472,9 +751,12 @@
                             <th>Net P&L</th>
                             <th>Cumulative P&L</th>
                             <th>Count</th>
+                            <th>Wins</th>
+                            <th>Losses</th>
                             <th>Win%</th>
                             <th>Run-up</th>
                             <th>Drawdown</th>
+                            <th>File</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -491,17 +773,41 @@
                 </div>
             </div>
 
+            <div class="glass-panel" id="coincidentPanel" style="display:none;">
+                <div class="section-title">Coincident Dates Analysis (Multiple Files)</div>
+                <div style="margin-bottom:10px; font-size:0.9em; color:var(--text-secondary);">
+                    Dates where trades occurred in more than one file simultaneously.
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="coincidentTable" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total P&L</th>
+                                <th>File Count</th>
+                                <th style="width:60%;">File Breakdown</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coincidentBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="glass-panel">
                 <div class="section-title">Trade History</div>
-                <div style="max-height: 500px; overflow-y: auto;">
-                    <table id="tradeListTable">
+                <div style="overflow-x: auto;">
+                    <table id="tradeListTable" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Net P&L</th>
+                                <th>Cumulative P&L</th>
+                                <th>Count</th>
+                                <th>Wins</th>
+                                <th>Losses</th>
+                                <th>Win%</th>
                                 <th>Run-up</th>
                                 <th>Drawdown</th>
-                                <th>Cumulative</th>
                                 <th>File</th>
                             </tr>
                         </thead>
@@ -545,8 +851,10 @@
         }
 
         // --- Core Logic ---
-        // --- Core Logic ---
         let parsedTrades = [];
+        let savedMultipliers = {};
+        let savedCapitals = {};
+        let hiddenFiles = new Set();
         // No global multiplier variable needed, read from DOM dynamically
 
         // Function to update multiplier and re-render
@@ -571,15 +879,192 @@
                     if (t.originalFileDrawdown !== undefined) t.fileDrawdown = t.originalFileDrawdown * factor;
                 });
 
-                // Re-render
-                calculateAndRender(parsedTrades);
-                // Also update the target calc if present
-                calculateTargetHit();
+                // Apply Filters (Date) then Render
+                applyFilters();
             }
         }
 
-        function renderFileControls(files) {
+        function applyFilters() {
+            const startStr = document.getElementById('startDateInput').value;
+            const endStr = document.getElementById('endDateInput').value;
+
+
+            let filtered = parsedTrades.filter(t => !hiddenFiles.has(t.sourceFile));
+
+            if (startStr || endStr) {
+                const startTs = startStr ? new Date(startStr).getTime() : 0;
+                // End date: set to end of that day (23:59:59)
+                const endTs = endStr ? new Date(endStr).setHours(23, 59, 59, 999) : Number.MAX_SAFE_INTEGER;
+
+                filtered = filtered.filter(t => {
+                    return t.timestamp >= startTs && t.timestamp <= endTs;
+                });
+            }
+
+            calculateAndRender(filtered);
+            calculateTargetHit(filtered); // Pass filtered data
+            calculateDrawdownHit(filtered);
+        }
+
+        function clearDateFilters() {
+            document.getElementById('startDateInput').value = '';
+            document.getElementById('endDateInput').value = '';
+            applyFilters();
+        }
+
+        function toggleFileVisibility(name) {
+            if (hiddenFiles.has(name)) hiddenFiles.delete(name);
+            else hiddenFiles.add(name);
+
+            // Scrape current multipliers to preserve them
+            const inputs = document.querySelectorAll('#fileControlsList input');
+            const mults = {};
+            inputs.forEach(inp => mults[inp.getAttribute('data-filename')] = inp.value);
+
+            // Re-render controls
+            const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
+            renderFileControls(uniqueFiles, mults);
+
+            // Update Report
+            updateMultipliers();
+        }
+
+        function deleteFile(name) {
+            if (!confirm(`Delete ${name}?`)) return;
+
+            // Remove from parsedTrades
+            parsedTrades = parsedTrades.filter(t => t.sourceFile !== name);
+            hiddenFiles.delete(name);
+
+            // Scrape multipliers (excluding deleted)
+            const inputs = document.querySelectorAll('#fileControlsList input');
+            const mults = {};
+            inputs.forEach(inp => {
+                const fname = inp.getAttribute('data-filename');
+                if (fname !== name) mults[fname] = inp.value;
+            });
+
+            // Re-render
+            const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
+            renderFileControls(uniqueFiles, mults);
+
+            if (uniqueFiles.length === 0) {
+                // Clear report
+                document.getElementById('activeFilesPanel').style.display = 'none';
+                calculateAndRender([]);
+            } else {
+                updateMultipliers();
+            }
+        }
+
+        function handleWheel(evt, inp) {
+            evt.preventDefault();
+            const delta = evt.deltaY < 0 ? 0.1 : -0.1;
+            let val = parseFloat(inp.value);
+            if (isNaN(val)) val = 1;
+            val = Math.round((val + delta) * 10) / 10;
+            if (val < 0) val = 0;
+            inp.value = val;
+            updateMultipliers();
+        }
+
+        function handleGroupWheel(evt, group) {
+            const inp = group.querySelector('input');
+            if (inp) handleWheel(evt, inp);
+        }
+
+        function adjustMult(name, delta, btn) {
+            const container = btn.closest('.chip-input-group');
+            const inp = container.querySelector('input');
+            let val = parseFloat(inp.value);
+            if (isNaN(val)) val = 1;
+            val = Math.round((val + delta) * 10) / 10;
+            // if (val < 0) val = 0; // Optional constrain
+            inp.value = val;
+            updateMultipliers();
+        }
+
+        function handleFileSelect(evt, isMerge = false) {
+            const files = evt.target.files;
+            if (!files.length) return;
+
+            const promises = [];
+            for (let i = 0; i < files.length; i++) {
+                promises.push(processFile(files[i]));
+            }
+
+            Promise.all(promises).then(results => {
+                const newTrades = results.flat();
+
+                if (newTrades.length === 0) {
+                    alert("No valid trades found!");
+                    return;
+                }
+
+                if (isMerge) {
+                    // Check Date Range overlap
+                    const startStr = document.getElementById('startDateInput').value;
+                    const endStr = document.getElementById('endDateInput').value;
+                    if (startStr || endStr) {
+                        const startTs = startStr ? new Date(startStr).getTime() : 0;
+                        const endTs = endStr ? new Date(endStr).setHours(23, 59, 59, 999) : Number.MAX_SAFE_INTEGER;
+
+                        const hasOverlap = newTrades.some(t => t.timestamp >= startTs && t.timestamp <= endTs);
+                        if (!hasOverlap) {
+                            if (confirm("Warning: The merged trades are outside your current Date Filter range and will not be visible.\n\nClear date filters to view them?")) {
+                                clearDateFilters();
+                            }
+                        }
+                    }
+
+                    // Append mode
+                    // Optionally deduplicate? For now, we assume user adds different files.
+                    parsedTrades = parsedTrades.concat(newTrades);
+                } else {
+                    // Overwrite mode
+                    parsedTrades = newTrades;
+                    hiddenFiles.clear(); // Reset hidden on new report
+                }
+
+                if (parsedTrades.length === 0) {
+                    alert("No valid trades found!");
+                    return;
+                }
+
+                // Collect existing multipliers and capitals if merge
+                let currentMults = {};
+                let currentCaps = {};
+                if (isMerge) {
+                    document.querySelectorAll('#fileControlsList input.chip-input').forEach(inp => {
+                        currentMults[inp.getAttribute('data-filename')] = inp.value;
+                    });
+                    document.querySelectorAll('#fileControlsList input.cap-input').forEach(inp => {
+                        currentCaps[inp.getAttribute('data-filename')] = inp.value;
+                    });
+                }
+
+                // Extract unique files
+                const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
+
+                // Render controls (preserve mults if merge)
+                renderFileControls(uniqueFiles, currentMults, currentCaps);
+
+                // Initial update
+                updateMultipliers();
+
+                // Ensure panel visible
+                document.getElementById('activeFilesPanel').style.display = 'block';
+
+                // Reset inputs
+                document.getElementById('csvFileInput').value = '';
+                document.getElementById('mergeFileInput').value = '';
+            });
+        }
+
+        function renderFileControls(files, savedMultipliers = {}, savedCapitals = {}) {
             const container = document.getElementById('fileControlsList');
+            const panel = document.getElementById('activeFilesPanel');
+
             if (!container) return;
             container.innerHTML = '';
 
@@ -587,22 +1072,86 @@
             if (files[0] && files[0].name) names = files.map(f => f.name);
             else names = files;
 
-            names.forEach(name => {
+            if (names.length > 0 && panel) {
+                panel.style.display = 'block'; // Show panel when files exist
+            }
+
+            names.sort().forEach(name => {
+                const initialVal = savedMultipliers[name] !== undefined ? savedMultipliers[name] : 1;
+                const initialCap = savedCapitals[name] !== undefined ? savedCapitals[name] : 35000;
+                const isHidden = hiddenFiles.has(name);
+
                 const div = document.createElement('div');
-                div.style.cssText = "border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 8px; background: var(--bg-color); min-width: max-content;";
+                div.className = `file-chip ${isHidden ? 'hidden' : ''}`;
+
+                // HTML Icons
+                const eyeIcon = isHidden
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`;
+
+                const trashIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`;
 
                 div.innerHTML = `
-                    <span style="font-size: 0.8em; color: var(--text-primary); font-weight:500;">${name}</span>
-                    <input type="number" step="0.1" data-filename="${name}" value="1" oninput="updateMultipliers()" 
-                        style="width: 60px; background: var(--surface-color); color: var(--accent-color); border: 1px solid var(--border-color); font-weight: 700; outline: none; font-size: 0.9em; padding: 2px 4px; border-radius: 4px;">
+                    <div class="chip-name" title="${name}">${name}</div>
+                    
+                    <div class="chip-actions">
+                        <button onclick="toggleFileVisibility('${name}')" title="${isHidden ? 'Show' : 'Hide'}" class="chip-btn ${isHidden ? 'hide' : 'show'}">
+                            ${eyeIcon}
+                        </button>
+                        <button onclick="deleteFile('${name}')" title="Delete" class="chip-btn delete">
+                            ${trashIcon}
+                        </button>
+                    </div>
+
+                    <div class="chip-input-group" style="margin-right:4px;">
+                        <span style="font-size:0.75em; color:var(--text-secondary); opacity:0.7; margin-right:2px;">₹</span>
+                        <input type="number" step="1000" data-filename="${name}" value="${initialCap}" 
+                            oninput="updateMultipliers()" 
+                            class="chip-input cap-input" style="width: 65px;">
+                    </div>
+
+                    <div class="chip-input-group" onwheel="handleGroupWheel(event, this)">
+                        <span style="font-size:0.75em; color:var(--text-secondary); opacity:0.7;">x</span>
+                        <input type="number" step="0.1" data-filename="${name}" value="${initialVal}" 
+                            oninput="updateMultipliers()" 
+                            onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown') setTimeout(updateMultipliers, 0)"
+                            class="chip-input">
+                        <div class="spinner-btns">
+                            <button class="spin-btn up" onclick="adjustMult('${name}', 0.1, this)">&#9650;</button>
+                            <button class="spin-btn down" onclick="adjustMult('${name}', -0.1, this)">&#9660;</button>
+                        </div>
+                    </div>
                 `;
                 container.appendChild(div);
             });
+
+            // Add Merge Button
+            const addBtn = document.createElement('div');
+            addBtn.className = 'file-chip';
+            addBtn.style.cssText = 'background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.3); cursor: pointer; justify-content: center; padding: 6px 10px; width: auto;';
+            addBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+            `;
+            addBtn.onclick = () => document.getElementById('mergeFileInput').click();
+            addBtn.title = "Add/Merge Document";
+            addBtn.onmouseover = function () { this.style.backgroundColor = 'rgba(16, 185, 129, 0.3)'; };
+            addBtn.onmouseout = function () { this.style.backgroundColor = 'rgba(16, 185, 129, 0.2)'; };
+
+            container.appendChild(addBtn);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             const fileInput = document.getElementById('csvFileInput');
+            const mergeInput = document.getElementById('mergeFileInput');
             renderLibraryList();
+
+            // Handle New Report Upload (Overwrite)
+            fileInput.addEventListener('change', (e) => handleFileSelect(e, false));
+
+            // Handle Merge Upload (Append)
+            mergeInput.addEventListener('change', (e) => handleFileSelect(e, true));
 
             // Enable Enter key to save
             const portfolioInput = document.getElementById('portfolioNameInput');
@@ -612,61 +1161,7 @@
                 });
             }
 
-            fileInput.addEventListener('change', async (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length === 0) return;
-
-                parsedTrades = [];
-                // Reset UI
-                calculateAndRender([]);
-
-                try {
-                    const allTrades = await Promise.all(files.map(file => processFile(file).catch(e => {
-                        console.error(`Error processing ${file.name}:`, e);
-                        return [];
-                    })));
-
-                    let rawTrades = allTrades.flat();
-
-                    // Update File List Display - NEW Dynamic Controls
-                    // renderFileControls(files); 
-                    // Move this AFTER dedupe/parsing? No, filenames are known here.
-                    renderFileControls(files.map(f => f.name));
-
-                    // Deduplication Logic - SAFE for Scalpers
-                    if (files.length > 1) {
-                        const uniqueTrades = new Map();
-                        rawTrades.forEach(t => {
-                            // If Date has Time -> Great. If not -> Risky.
-                            let key = `${t.dateStr}_${t.pnl}`;
-                            if (t.dateStr.length < 12) {
-                                // Short date (YYYY-MM-DD), collision likely for scalpers.
-                                // We use a content hash simulation
-                                key = JSON.stringify(t);
-                            }
-                            if (!uniqueTrades.has(key)) uniqueTrades.set(key, t);
-                        });
-                        parsedTrades = Array.from(uniqueTrades.values());
-                    } else {
-                        // Single file: TRUST EVERY ROW. Do not dedupe.
-                        parsedTrades = rawTrades;
-                    }
-
-                    if (parsedTrades.length > 0) {
-                        // Extract Unique Files for Controls (Handle JSON case where sourceFile is embedded)
-                        const uniqueFiles = new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean));
-                        // If we just uploaded files, 'files' variable has names. But for mixed or JSON, rely on trades.
-                        if (uniqueFiles.size > 0) renderFileControls(Array.from(uniqueFiles));
-
-                        calculateAndRender(parsedTrades);
-                        document.getElementById('exportBtn').style.display = 'inline-block';
-                    } else {
-                        alert("No valid 'Exit' trades found.");
-                    }
-                } catch (err) {
-                    console.error("Batch processing error:", err);
-                }
-            });
+            // Old Duplicate Listener Removed
         });
 
         const processFile = (file) => {
@@ -850,7 +1345,7 @@
                     fileDrawdown: fileDrawdown < 0 ? fileDrawdown : undefined,
                     originalFileDrawdown: fileDrawdown < 0 ? fileDrawdown : undefined,
 
-                    displayRU: 0, // placeholders for rendering
+                    displayRU: 0, // placeholders
                     displayDD: 0
                 });
             }
@@ -952,6 +1447,95 @@
                 }
             });
 
+            // Top 3 Biggest Losses
+            const allLosses = trades.filter(t => t.pnl < 0).sort((a, b) => a.pnl - b.pnl); // Ascending (most negative first)
+            const top3Losses = allLosses.slice(0, 3);
+
+            const elMaxLoss = document.getElementById('maxSingleLossDisplay');
+            const elTop3 = document.getElementById('top3LossesList');
+
+            if (elMaxLoss && top3Losses.length > 0) {
+                elMaxLoss.textContent = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(top3Losses[0].pnl);
+            } else if (elMaxLoss) {
+                elMaxLoss.textContent = '--';
+            }
+
+            if (elTop3) {
+                if (top3Losses.length > 0) {
+                    elTop3.innerHTML = top3Losses.map((l, i) => {
+                        return `<div style="display:flex; justify-content:space-between; width:100%; font-size:0.85em; ${(i < 2) ? 'border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:4px;' : ''}">
+                            <span>#${i + 1} <span style="opacity:0.75; font-size:0.9em; margin-left:4px;">${formatDate(l.daily)}</span></span>
+                            <span class="text-red" style="font-weight:600;">${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(l.pnl)}</span>
+                        </div>`;
+                    }).join('');
+                } else {
+                    elTop3.innerHTML = '<span style="opacity:0.5;">No losses recorded</span>';
+                }
+            }
+
+            // Top 3 Biggest Wins
+            const allWins = trades.filter(t => t.pnl > 0).sort((a, b) => b.pnl - a.pnl); // Descending (largest positive first)
+            const top3Wins = allWins.slice(0, 3);
+
+            const elMaxWin = document.getElementById('maxSingleProfitDisplay');
+            const elTop3Wins = document.getElementById('top3WinsList');
+
+            if (elMaxWin && top3Wins.length > 0) {
+                elMaxWin.textContent = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(top3Wins[0].pnl);
+            } else if (elMaxWin) {
+                elMaxWin.textContent = '--';
+            }
+
+            if (elTop3Wins) {
+                if (top3Wins.length > 0) {
+                    elTop3Wins.innerHTML = top3Wins.map((w, i) => {
+                        return `<div style="display:flex; justify-content:space-between; width:100%; font-size:0.85em; ${(i < 2) ? 'border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:4px;' : ''}">
+                            <span>#${i + 1} <span style="opacity:0.75; font-size:0.9em; margin-left:4px;">${formatDate(w.daily)}</span></span>
+                            <span class="text-green" style="font-weight:600;">${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(w.pnl)}</span>
+                        </div>`;
+                    }).join('');
+                } else {
+                    elTop3Wins.innerHTML = '<span style="opacity:0.5;">No wins recorded</span>';
+                }
+            }
+
+            // Yearly Stats Aggregation (Months)
+            // 1. Aggregate P&L by Month first
+            const monthMap = {};
+            trades.forEach(t => {
+                const ym = t.daily.substring(0, 7); // YYYY-MM
+                if (!monthMap[ym]) monthMap[ym] = 0;
+                monthMap[ym] += t.pnl;
+            });
+
+            // 2. Aggregate Monthly Results by Year
+            const yearlyStats = {};
+            Object.keys(monthMap).forEach(ym => {
+                const y = ym.substring(0, 4);
+                const pnl = monthMap[ym];
+                if (!yearlyStats[y]) yearlyStats[y] = { wins: 0, losses: 0 };
+                if (pnl > 0) yearlyStats[y].wins++;
+                else yearlyStats[y].losses++;
+            });
+
+            const elYearlyParams = document.getElementById('yearlyStatsList');
+            if (elYearlyParams) {
+                let htmlY = '';
+                Object.keys(yearlyStats).sort().reverse().forEach(y => {
+                    const s = yearlyStats[y];
+                    htmlY += `<div style="display:flex; align-items:center; justify-content:space-between; font-size:0.8em; border-bottom:1px solid var(--border-color); padding:6px 0;">
+                        <span style="opacity:0.9; font-weight:600; font-size:1.1em; color:var(--text-primary);">${y}</span>
+                        <div style="white-space:nowrap; font-weight:700;">
+                            <span class="text-green" style="margin-right:4px;">${s.wins} M</span>
+                            <span style="opacity:0.4; margin:0 4px;">|</span>
+                            <span class="text-red">${s.losses} M</span>
+                        </div>
+                    </div>`;
+                });
+                if (!htmlY) htmlY = '<span style="opacity:0.5; font-size:0.8em">No Data</span>';
+                elYearlyParams.innerHTML = htmlY;
+            }
+
             // Drawdown vars
             let peak = 0;
             let maxDD = 0;
@@ -992,9 +1576,11 @@
                     maxDDTroughTimestamp = t.timestamp;
 
                     const days = Math.floor((t.timestamp - peakTimestamp) / (1000 * 60 * 60 * 24));
-                    ddRange = `<div style="display:flex; flex-direction:column; gap:2px;">
-                        <span style="font-size:0.85em; color:var(--text-secondary);">(${formatDate(peakDate)} to ${formatDate(t.daily)})</span> 
-                        <span style="font-size:1em; color:var(--text-primary); font-weight:800;">${days} Days</span>
+                    // Part 1: Drop Block
+                    ddRange = `<div style="background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column;">
+                        <span style="font-size:0.7em; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Drop Period</span>
+                        <span style="font-size:1.2em; font-weight:800; color:#f1f5f9;">${days} Days</span>
+                        <span style="font-size:0.75em; color:#cbd5e1; margin-top:2px;">${formatDate(peakDate)} to ${formatDate(t.daily)}</span>
                     </div>`;
                 }
 
@@ -1036,14 +1622,19 @@
                     }
                 }
 
+                // Part 2: Recovery Block
                 const recText = recoveryFound
-                    ? `<div style="margin-top: 4px; border-top: 1px dashed var(--border-color); padding-top:4px; display:flex; flex-direction:column; gap:2px;">
-                        <span style="font-size:0.85em; color:#fb923c;">Rec: <span style="font-weight:700;">(${recoveryDateStr})</span></span> 
-                        <span style="font-size:1em; color:#fb923c; font-weight:800;">${recoveryDays} Days</span>
+                    ? `<div style="background:rgba(245, 158, 11, 0.15); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column;">
+                        <span style="font-size:0.7em; color:#fdba74; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Recovery</span>
+                        <span style="font-size:1.2em; font-weight:800; color:#fb923c;">${recoveryDays} Days</span> 
+                        <span style="font-size:0.75em; color:#fed7aa; margin-top:2px;">End: ${recoveryDateStr}</span>
                        </div>`
-                    : `<div style="margin-top: 4px; font-size:0.85em; color:var(--error-color);">Not Recovered</div>`;
+                    : `<div style="background:rgba(239, 68, 68, 0.15); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <span style="font-size:0.75em; color:#fca5a5; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Status</span>
+                        <span style="font-size:1em; font-weight:800; color:#f87171;">Not Recovered</span>
+                       </div>`;
 
-                ddRange += recText;
+                ddRange = `<div style="display:flex; gap:10px; width:100%; margin-top:10px;">${ddRange}${recText}</div>`;
             }
             const hasFileRunUp = trades.some(t => t.fileRunUp !== undefined);
             if (hasFileRunUp) {
@@ -1164,8 +1755,25 @@
             setText('grossLoss', fmt(-grossLoss)); // Show as negative amount
 
             setText('avgProfit', totalTrades ? fmt(totalNetPL / totalTrades) : fmt(0));
-            setText('avgWinner', wins ? fmt(grossProfit / wins) : fmt(0));
-            setText('avgLoser', losses ? fmt(-grossLoss / losses) : fmt(0));
+            setText('avgProfit', totalTrades ? fmt(totalNetPL / totalTrades) : fmt(0));
+
+            const valAvgWin = wins ? grossProfit / wins : 0;
+            const valAvgLoss = losses ? Math.abs(grossLoss) / losses : 0;
+            setText('avgWinner', fmt(valAvgWin));
+            setText('avgLoser', fmt(-valAvgLoss));
+
+            // Populate Risk Reward Ratio
+            const elRr = document.getElementById('rrRatio');
+            const elRrWin = document.getElementById('rrAvgWin');
+            const elRrLoss = document.getElementById('rrAvgLoss');
+            if (elRr && elRrWin && elRrLoss) {
+                let ratio = 0;
+                if (valAvgLoss > 0) ratio = valAvgWin / valAvgLoss;
+                elRr.textContent = `1 : ${ratio.toFixed(2)}`;
+                elRr.className = ratio >= 1.5 ? 'stats-card-value text-green' : (ratio >= 1.0 ? 'stats-card-value text-primary' : 'stats-card-value text-red');
+                elRrWin.textContent = fmt(valAvgWin);
+                elRrLoss.textContent = fmt(-valAvgLoss);
+            }
 
             setText('maxDrawdown', fmt(maxDD));
             const elDD = document.getElementById('maxDrawdownDateRange');
@@ -1185,9 +1793,10 @@
             setText('maxLoseStreakAmount', fmt(maxLoseStreakAmt));
 
             // Render Charts & Tables
+            // Render Charts & Tables
             renderEquityCurve(trades);
             renderTradeList(trades);
-            updateView();
+            updateView(trades);
         }
 
         function formatDate(isoStr) {
@@ -1209,7 +1818,45 @@
             if (parsedTrades.length === 0) return alert("No data");
 
             const lib = JSON.parse(localStorage.getItem('portfolioLibrary') || '{}');
-            lib[name] = { date: new Date().toISOString(), trades: parsedTrades };
+            const now = new Date().toISOString();
+
+            let created = now;
+            // Preserve created date if overwriting
+            if (lib[name] && lib[name].created) {
+                created = lib[name].created;
+            } else if (lib[name] && lib[name].date) {
+                // Migration support
+                created = lib[name].date;
+            }
+
+            // Capture current multipliers
+            const inputs = document.querySelectorAll('#fileControlsList input.chip-input');
+            const multipliers = {};
+            inputs.forEach(inp => {
+                multipliers[inp.getAttribute('data-filename')] = inp.value;
+            });
+
+            // Capture current capitals
+            const capInputs = document.querySelectorAll('#fileControlsList input.cap-input');
+            const capitals = {};
+            capInputs.forEach(inp => {
+                capitals[inp.getAttribute('data-filename')] = inp.value;
+            });
+
+            // Capture Date Filters
+            const filters = {
+                start: document.getElementById('startDateInput').value,
+                end: document.getElementById('endDateInput').value
+            };
+
+            lib[name] = {
+                created: created,
+                modified: now,
+                trades: parsedTrades,
+                multipliers: multipliers,
+                filters: filters
+            };
+
             localStorage.setItem('portfolioLibrary', JSON.stringify(lib));
             renderLibraryList();
             document.getElementById('portfolioNameInput').value = '';
@@ -1219,12 +1866,42 @@
         function renderLibraryList() {
             const list = document.getElementById('portfolioList');
             const lib = JSON.parse(localStorage.getItem('portfolioLibrary') || '{}');
-            list.innerHTML = Object.keys(lib).map(name => `
-                <li style="display:flex; justify-content:space-between; padding:8px; background:#2d2d2d; margin-bottom:5px; border-radius:4px;">
-                    <span style="cursor:pointer; flex:1" onclick="loadLib('${name}')">${name}</span>
-                    <button onclick="delLib('${name}')" style="background:none; border:none; color:#ef4444; cursor:pointer;">Ã—</button>
+
+            if (Object.keys(lib).length === 0) {
+                list.innerHTML = '<div style="color:#64748b; font-size:0.9em; text-align:center; padding:10px;">No saved portfolios</div>';
+                return;
+            }
+
+            list.innerHTML = Object.keys(lib).sort().map(name => {
+                const item = lib[name];
+                // Fallbacks for migration
+                const created = item.created || item.date || new Date().toISOString();
+                const modified = item.modified || item.date || new Date().toISOString();
+
+                const dateFmt = (d) => {
+                    if (!d) return '-';
+                    const date = new Date(d);
+                    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                };
+
+                return `
+                <li style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:#1e293b; margin-bottom:6px; border-radius:6px; border:1px solid #334155;">
+                    <div style="flex:1; cursor:pointer;" onclick="loadLib('${name}')">
+                        <div style="color:#f8fafc; font-weight:600; font-size:0.95em;">${name}</div>
+                        <div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">
+                            <span style="margin-right:8px;">Created: ${dateFmt(created)}</span>
+                            <span>Mod: ${dateFmt(modified)}</span>
+                        </div>
+                    </div>
+                    <button onclick="delLib('${name}')" title="Delete Portfolio" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:4px; display:flex; align-items:center;">
+                        <!-- Trash Icon SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
                 </li>
-            `).join('');
+            `;
+            }).join('');
         }
 
         window.loadLib = (name) => {
@@ -1233,9 +1910,21 @@
                 parsedTrades = lib[name].trades;
                 // Update Title to show open portfolio
                 document.getElementById('reportTitle').textContent = `FiFto Backtest report - ${name}`;
-                calculateAndRender(parsedTrades);
+
+                // Extract unique files to render controls (and show Date Filter/Multipliers)
+                const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
+                const savedMultipliers = lib[name].multipliers || {};
+                renderFileControls(uniqueFiles, savedMultipliers);
+
+                // Restore Date Filters
+                const filters = lib[name].filters || {};
+                document.getElementById('startDateInput').value = filters.start || '';
+                document.getElementById('endDateInput').value = filters.end || '';
+
+                // Apply Filters (also calls calculateAndRender)
+                applyFilters();
             }
-        };
+        }
 
         window.delLib = (name) => {
             const lib = JSON.parse(localStorage.getItem('portfolioLibrary') || '{}');
@@ -1258,6 +1947,74 @@
 
         // --- Chart/Table Logic ---
         let equityChart = null;
+        // barChart is declared elsewhere
+        let pieWinChart = null;
+        let pieFileChart = null;
+        function renderPieCharts(trades) {
+            // 1. Win/Loss Pie
+            const ctxWL = document.getElementById('pieWinLoss').getContext('2d');
+            if (pieWinChart) pieWinChart.destroy();
+
+            let wins = 0, losses = 0;
+            trades.forEach(t => { if (t.pnl >= 0) wins++; else losses++; });
+
+            pieWinChart = new Chart(ctxWL, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Wins', 'Losses'],
+                    datasets: [{
+                        data: [wins, losses],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderColor: '#0f172a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // 2. File Distribution Pie
+            const ctxFD = document.getElementById('pieFileDist').getContext('2d');
+            if (pieFileChart) pieFileChart.destroy();
+
+            const fileCounts = {};
+            trades.forEach(t => {
+                const f = t.sourceFile || 'Unknown';
+                fileCounts[f] = (fileCounts[f] || 0) + 1;
+            });
+
+            const labels = Object.keys(fileCounts);
+            const data = Object.values(fileCounts);
+            // Palette
+            const palette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6366f1', '#14b8a6', '#f97316'];
+            const apiColors = labels.map((_, i) => palette[i % palette.length]);
+
+            pieFileChart = new Chart(ctxFD, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: apiColors,
+                        borderColor: '#0f172a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } }
+                    }
+                }
+            });
+        }
+
         function renderEquityCurve(trades) {
             const ctx = document.getElementById('equityChart').getContext('2d');
             if (equityChart) equityChart.destroy();
@@ -1417,15 +2174,16 @@
         }
 
         let barChart = null;
-        function updateView() {
-            if (!parsedTrades.length) return;
+        function updateView(filteredData) {
+            const tradesToUse = filteredData || parsedTrades;
+            if (!tradesToUse.length) return;
             const mode = document.querySelector('input[name="chartView"]:checked').value;
 
             // Aggregate
             const map = {};
             // We need order for DD/RU, so process sorted trades.
             // Trades are already sorted by time in calculateAndRender.
-            parsedTrades.forEach(t => {
+            tradesToUse.forEach(t => {
                 const k = mode === 'monthly' ? t.month : t.daily;
                 if (!map[k]) {
                     map[k] = {
@@ -1438,13 +2196,15 @@
                         peak: 0,
                         maxDD: 0,
                         trough: 0,
-                        maxRunUp: 0
+                        maxRunUp: 0,
+                        files: new Set()
                     };
                 }
                 const m = map[k];
                 m.pnl += t.pnl;
                 m.count++;
                 if (t.pnl > 0) m.wins++;
+                if (t.sourceFile) m.files.add(t.sourceFile); // Track main files
 
                 // Calc DD/RU within this period
                 m.running += t.pnl;
@@ -1468,7 +2228,42 @@
                     if (m.fileDrawdownMax === undefined) m.fileDrawdownMax = 0; // usually negative/zero
                     if (t.fileDrawdown < m.fileDrawdownMax) m.fileDrawdownMax = t.fileDrawdown;
                 }
+
+                // Store trades for deeper drilling (Daily breakdown within Month)
+                if (!m.dailyBreakdown) m.dailyBreakdown = {};
+                if (!m.dailyBreakdown[t.daily]) {
+                    m.dailyBreakdown[t.daily] = { pnl: 0, count: 0, wins: 0, maxDD: 0, maxRunUp: 0, running: 0, peak: 0, trough: 0, files: new Set() };
+                }
+                const day = m.dailyBreakdown[t.daily];
+                day.pnl += t.pnl;
+                day.count++;
+                if (t.pnl > 0) day.wins++;
+                if (t.sourceFile) day.files.add(t.sourceFile); // Add File Name
+
+                // Track Daily Max DD/RunUp (using Trade values or approximation)
+                if (t.fileRunUp > day.maxRunUp) day.maxRunUp = t.fileRunUp;
+                if (t.fileDrawdown < day.maxDD) day.maxDD = t.fileDrawdown;
+
+                // Simple Daily Aggregation for nested view
+                // Note: Drawdown/Runup here is intra-day if multiple trades, or just sum?
+                // User asked for "Daily Wise". Usually just P&L.
+
+                // --- Level 4: File Breakdown Logic ---
+                if (!day.fileStats) day.fileStats = {};
+                const fName = t.sourceFile || 'Unknown';
+                if (!day.fileStats[fName]) {
+                    day.fileStats[fName] = { pnl: 0, count: 0, wins: 0, maxRunUp: 0, maxDD: 0, files: new Set([fName]) };
+                }
+                const fStat = day.fileStats[fName];
+                fStat.pnl += t.pnl;
+                fStat.count++;
+                if (t.pnl > 0) fStat.wins++;
+                if (t.fileRunUp > fStat.maxRunUp) fStat.maxRunUp = t.fileRunUp;
+                if (t.fileDrawdown < fStat.maxDD) fStat.maxDD = t.fileDrawdown;
+
             });
+
+
 
             const data = Object.keys(map).sort().map(k => {
                 const m = map[k];
@@ -1480,9 +2275,27 @@
 
             renderTable(data);
             renderBarChart(data);
-            renderFileBreakdown(parsedTrades); // New dynamic table
+            renderFileBreakdown(tradesToUse); // New dynamic table
+            renderPieCharts(tradesToUse); // New Pie Charts
+            renderCoincidentTable(tradesToUse); // New separate table
 
             document.getElementById('periodHeader').textContent = mode === 'monthly' ? 'Month' : 'Date';
+        }
+
+        function toggleDate(dateID) {
+            const rows = document.querySelectorAll(`.date-row-${dateID}`);
+            const icon = document.getElementById(`icon-date-${dateID}`);
+            let requestShow = false;
+
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                requestShow = true;
+            }
+
+            rows.forEach(r => {
+                r.style.display = requestShow ? 'table-row' : 'none';
+            });
+
+            if (icon) icon.innerHTML = requestShow ? '&#9660;' : '&#9654;';
         }
 
         function renderFileBreakdown(trades) {
@@ -1577,23 +2390,386 @@
 
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
-            let cum = 0;
             const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
 
-            tbody.innerHTML = data.map(row => {
-                cum += row.pnl;
-                const winRate = ((row.wins / row.count) * 100).toFixed(1) + '%';
-                // Add click handler for filtering
-                return `<tr class="clickable-row" onclick="filterHistory('${row.label}')" title="Click to view trades for ${row.label}">
-                    <td>${row.label}</td>
-                    <td class="${row.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(row.pnl)}</td>
-                    <td class="${cum >= 0 ? 'text-green' : 'text-red'}">${fmt(cum)}</td>
-                    <td>${row.count}</td>
-                    <td>${winRate}</td>
-                    <td class="text-green">${fmt(row.maxRunUp)}</td>
-                    <td class="text-red">${fmt(row.maxDD)}</td>
-                </tr>`;
-            }).join('');
+            // Heuristic to detect Monthly view (Label format YYYY-MM)
+            const isMonthly = data.length > 0 && data[0].label.length === 7;
+
+            if (isMonthly) {
+                // Group by Year
+                const years = {};
+                let cum = 0;
+
+                data.forEach(row => {
+                    const y = row.label.substring(0, 4);
+                    if (!years[y]) years[y] = {
+                        year: y,
+                        pnl: 0,
+                        count: 0,
+                        wins: 0,
+                        rows: []
+                    };
+                    years[y].pnl += row.pnl;
+                    years[y].count += row.count;
+                    years[y].wins += row.wins;
+                    years[y].rows.push(row);
+                });
+
+                // Render
+                let html = '';
+                let runningCum = 0;
+
+                Object.keys(years).sort().forEach(y => {
+                    const yr = years[y];
+                    const winRate = yr.count ? ((yr.wins / yr.count) * 100).toFixed(1) : 0;
+
+                    // Year Header Row
+                    html += `
+                        <tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleYear('${y}')">
+                            <td style="display:flex; align-items:center; gap:8px;">
+                                <span id="icon-${y}">&#9654;</span> ${y} 
+                                <span style="font-size:0.8em; opacity:0.7; font-weight:400;">(${yr.count} trades)</span>
+                            </td>
+                            <td class="${yr.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(yr.pnl)}</td>
+                            <td style="opacity:0.5">-</td> 
+                            <td>${yr.count}</td>
+                            <td class="text-green">${yr.wins}</td>
+                            <td class="text-red">${yr.count - yr.wins}</td>
+                            <td>${winRate}%</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td> <!-- File Col -->
+                        </tr>
+                    `;
+
+                    // Month Rows
+                    yr.rows.forEach(row => {
+                        runningCum += row.pnl;
+                        const rowWin = ((row.wins / row.count) * 100).toFixed(1) + '%';
+                        const mID = row.label; // YYYY-MM
+
+                        html += `
+                            <tr class="year-row-${y} clickable-row" style="display:none; background:#0f172a;" onclick="toggleMonth('${mID}')" title="Click to view daily details">
+                                <td style="padding-left:30px; font-size:0.95em; color:var(--text-secondary); border-left: 2px solid var(--border-color); display:flex; align-items:center; gap:5px;">
+                                    <span id="icon-${mID}" style="font-size:0.8em; width:12px;">&#9654;</span> ${row.label}
+                                </td>
+                                <td class="${row.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(row.pnl)}</td>
+                                <td class="${runningCum >= 0 ? 'text-green' : 'text-red'}">${fmt(runningCum)}</td>
+                                <td>${row.count}</td>
+                                <td class="text-green">${row.wins}</td>
+                                <td class="text-red">${row.count - row.wins}</td>
+                                <td>${rowWin}</td>
+                                <td class="text-green">${fmt(row.maxRunUp)}</td>
+                                <td class="text-red">${fmt(row.maxDD)}</td>
+                                <td>-</td> <!-- File Col -->
+                            </tr>
+                        `;
+
+                        // Daily Rows (Level 3)
+                        if (row.dailyBreakdown) {
+                            let dailyCum = runningCum - row.pnl; // Start from previous month's end
+
+                            Object.keys(row.dailyBreakdown).sort().forEach(dayDate => {
+                                const day = row.dailyBreakdown[dayDate];
+                                dailyCum += day.pnl;
+                                const dWin = ((day.wins / day.count) * 100).toFixed(1) + '%';
+                                const filesInfo = Array.from(day.files).join(', '); // Join file names
+
+                                const [y, m, d] = dayDate.split('-');
+                                const fmtDate = `${d}-${m}-${y}`;
+                                const dateID = dayDate; // YYYY-MM-DD
+                                const hasFiles = day.fileStats && Object.keys(day.fileStats).length > 0;
+                                const expandCursor = hasFiles ? 'cursor:pointer;' : '';
+
+                                html += `
+                                    <tr class="month-row-${mID}" style="display:none; background:#020617; font-size:0.85em; ${expandCursor}" ${hasFiles ? `onclick="toggleDate('${dateID}')"` : ''}>
+                                        <td style="padding-left:60px; color:var(--text-secondary); border-left: 2px solid var(--border-color); white-space:nowrap; display:flex; align-items:center; gap:5px;">
+                                            ${hasFiles ? `<span id="icon-date-${dateID}" style="font-size:0.8em; width:12px;">&#9654;</span>` : ''} 
+                                            ${fmtDate}
+                                        </td>
+                                        <td class="${day.pnl >= 0 ? 'text-green' : 'text-red'}" style="white-space:nowrap;">${fmt(day.pnl)}</td>
+                                        <td class="${dailyCum >= 0 ? 'text-green' : 'text-red'}" style="white-space:nowrap;">${fmt(dailyCum)}</td>
+                                        <td>${day.count}</td>
+                                        <td class="text-green">${day.wins}</td>
+                                        <td class="text-red">${day.count - day.wins}</td>
+                                        <td>${dWin}</td>
+                                        <td class="text-green" style="white-space:nowrap;">${fmt(day.maxRunUp)}</td>
+                                        <td class="text-red" style="white-space:nowrap;">${fmt(day.maxDD)}</td>
+                                        <td style="color:var(--text-secondary); font-size:0.9em; white-space:nowrap;">${filesInfo}</td>
+                                    </tr>
+                                `;
+
+                                // Level 4: File Rows
+                                if (hasFiles) {
+                                    Object.keys(day.fileStats).sort().forEach(fName => {
+                                        const fStat = day.fileStats[fName];
+                                        const fWin = ((fStat.wins / fStat.count) * 100).toFixed(1) + '%';
+
+                                        html += `
+                                            <tr class="date-row-${dateID}" style="display:none; background:#000000; font-size:0.8em; border-left: 3px solid var(--accent-color);">
+                                                <td style="padding-left:90px; color:#94a3b8; font-style:italic;">${fName}</td>
+                                                <td class="${fStat.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(fStat.pnl)}</td>
+                                                <td style="opacity:0.3">-</td> 
+                                                <td>${fStat.count}</td>
+                                                <td class="text-green">${fStat.wins}</td>
+                                                <td class="text-red">${fStat.count - fStat.wins}</td>
+                                                <td>${fWin}</td>
+                                                <td class="text-green">${fmt(fStat.maxRunUp)}</td>
+                                                <td class="text-red">${fmt(fStat.maxDD)}</td>
+                                                <td style="opacity:0.5">-</td>
+                                            </tr>
+                                        `;
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+                tbody.innerHTML = html;
+
+            } else {
+                // Standard Daily View (Flat)
+                let cum = 0;
+                tbody.innerHTML = data.map(row => {
+                    cum += row.pnl;
+                    const winRate = ((row.wins / row.count) * 100).toFixed(1) + '%';
+                    const filesInfo = row.files ? Array.from(row.files).join(', ') : '-';
+                    return `<tr class="clickable-row">
+                        <td>${row.label}</td>
+                        <td class="${row.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(row.pnl)}</td>
+                        <td class="${cum >= 0 ? 'text-green' : 'text-red'}">${fmt(cum)}</td>
+                        <td>${row.count}</td>
+                        <td class="text-green">${row.wins}</td>
+                        <td class="text-red">${row.count - row.wins}</td>
+                        <td>${winRate}</td>
+                        <td class="text-green">${fmt(row.maxRunUp)}</td>
+                        <td class="text-red">${fmt(row.maxDD)}</td>
+                        <td style="color:var(--text-secondary); font-size:0.9em;">${filesInfo}</td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        function renderCoincidentTable(trades) {
+            const panel = document.getElementById('coincidentPanel');
+            const tbody = document.getElementById('coincidentBody');
+            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
+
+            // Group by Date (YYYY-MM-DD)
+            const map = {};
+            trades.forEach(t => {
+                const date = t.daily; // YYYY-MM-DD
+                if (!map[date]) map[date] = { date: date, dateStr: t.dateStr, pnl: 0, files: new Set(), fileDetails: {} };
+                const d = map[date];
+                d.pnl += t.pnl;
+
+                const fName = t.sourceFile || 'Unknown';
+                d.files.add(fName);
+                if (!d.fileDetails[fName]) d.fileDetails[fName] = 0;
+                d.fileDetails[fName] += t.pnl;
+            });
+
+            // Filter for dates with > 1 file
+            const coincidence = Object.values(map).filter(d => d.files.size > 1).sort((a, b) => b.date.localeCompare(a.date)); // Newest first
+
+            if (coincidence.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            panel.style.display = 'block';
+
+            // Group by Year > Month
+            const years = {};
+            coincidence.forEach(d => {
+                const y = d.date.substring(0, 4);
+                const m = d.date.substring(0, 7); // YYYY-MM
+
+                if (!years[y]) years[y] = { pnl: 0, count: 0, months: {} };
+                years[y].pnl += d.pnl;
+                years[y].count++;
+
+                if (!years[y].months[m]) years[y].months[m] = { pnl: 0, count: 0, days: [] };
+                years[y].months[m].pnl += d.pnl;
+                years[y].months[m].count++;
+                years[y].months[m].days.push(d);
+            });
+
+            // Render Hierarchy
+            let html = '';
+            Object.keys(years).sort().reverse().forEach(y => {
+                const yr = years[y];
+                const yrId = `coinc-yr-${y}`;
+
+                // Year Row
+                html += `
+                    <tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleCoincYear('${y}')">
+                        <td style="display:flex; align-items:center; gap:8px;">
+                            <span id="icon-${yrId}">&#9654;</span> ${y} 
+                            <span style="font-size:0.8em; opacity:0.7; font-weight:400;">(${yr.count} coincident days)</span>
+                        </td>
+                        <td class="${yr.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(yr.pnl)}</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                `;
+
+                // Month Rows
+                Object.keys(yr.months).sort().reverse().forEach(m => {
+                    const mo = yr.months[m];
+                    const moId = `coinc-mo-${m}`; // YYYY-MM
+
+                    html += `
+                        <tr class="${yrId}" style="display:none; background:#0f172a; cursor:pointer;" onclick="toggleCoincMonth('${m}')">
+                            <td style="padding-left:30px; border-left: 2px solid var(--border-color); display:flex; align-items:center; gap:5px;">
+                                <span id="icon-${moId}" style="font-size:0.8em; width:12px;">&#9654;</span> ${m}
+                                <span style="font-size:0.8em; opacity:0.7;">(${mo.count} days)</span>
+                            </td>
+                            <td class="${mo.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(mo.pnl)}</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    `;
+
+                    // Day Rows
+                    mo.days.forEach(d => {
+                        const fileBadges = Object.keys(d.fileDetails).sort().map(f => {
+                            const val = d.fileDetails[f];
+                            const cls = val >= 0 ? 'text-green' : 'text-red';
+                            return `<span style="display:inline-block; background:#1e293b; padding:2px 8px; border-radius:12px; margin-right:6px; font-size:0.85em; border:1px solid #334155;">
+                                <span style="color:#e2e8f0;">${f}</span>: <span class="${cls}" style="font-weight:600;">${fmt(val)}</span>
+                            </span>`;
+                        }).join(' ');
+
+                        html += `
+                            <tr class="${moId} ${yrId}-child" style="display:none; background:#020617;">
+                                <td style="padding-left:60px; color:var(--text-secondary); border-left: 2px solid var(--border-color);">${d.dateStr}</td>
+                                <td class="${d.pnl >= 0 ? 'text-green' : 'text-red'}" style="font-weight:700;">${fmt(d.pnl)}</td>
+                                <td>${d.files.size}</td>
+                                <td>${fileBadges}</td>
+                            </tr>
+                        `;
+                    });
+                });
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function toggleCoincYear(y) {
+            const yrId = `coinc-yr-${y}`;
+            const rows = document.querySelectorAll(`.${yrId}`);
+            const icon = document.getElementById(`icon-${yrId}`);
+            let show = false;
+
+            // Check if first Month row is hidden
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                show = true;
+            }
+
+            rows.forEach(r => {
+                // Should we show all? Or just Months?
+                // Ideally show Month rows. Keep Child (Day) rows hidden unless Month was open?
+                // Simpler: Just toggle Month rows. Child rows logic handled by toggleCoincMonth.
+                // But wait, if we hide Year, we must hide EVERYTHING under it (Months and Days).
+
+                if (show) {
+                    // Only show Month rows directly (not children of months)
+                    // My class structure: Month Row has class `yrId`. Day Row has class `moId` AND `yrId-child`.
+                    // Wait, Day Row needs to be hidden if Month is NOT expanded.
+                    // Let's rely on specific classes.
+                    if (!r.classList.contains(`${yrId}-child`)) {
+                        r.style.display = 'table-row';
+                    }
+                } else {
+                    r.style.display = 'none'; // Hide month rows
+                    // Also hide children?
+                    // Day rows have class `${moId}`. 
+                    // This selector `.${yrId}` selects Month rows.
+                    // I need to select children too?
+                    // Or add `${yrId}` class to children too? NO.
+                }
+            });
+
+            // If Hiding, we must also hide any open children (Day rows).
+            if (!show) {
+                const children = document.querySelectorAll(`.${yrId}-child`);
+                children.forEach(c => c.style.display = 'none');
+                // Reset Month icons? Optional.
+            }
+
+            if (icon) icon.innerHTML = show ? '&#9660;' : '&#9654;';
+        }
+
+        function toggleCoincMonth(m) {
+            const moId = `coinc-mo-${m}`;
+            const rows = document.querySelectorAll(`.${moId}`); // These are Day rows
+            const icon = document.getElementById(`icon-${moId}`);
+            let show = false;
+
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                show = true;
+            }
+
+            rows.forEach(r => {
+                r.style.display = show ? 'table-row' : 'none';
+            });
+
+            if (icon) icon.innerHTML = show ? '&#9660;' : '&#9654;';
+        }
+
+        function toggleYear(val) {
+            const rows = document.querySelectorAll(`.year-row-${val}`);
+            const icon = document.getElementById(`icon-${val}`);
+            let requestShow = false;
+
+            // Check first row state
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                requestShow = true;
+            }
+
+            rows.forEach(r => {
+                r.style.display = requestShow ? 'table-row' : 'none';
+                // If hiding year, also hide any open months inside it? 
+                // Creating a cleaner UX: If collapsing year, just collapse year rows. The nested month rows will stay as is or hidden?
+                // The current structure has Month rows as siblings to Year, and Daily as Siblings to Month.
+                // It's a flat table visually.
+
+                // If collapsing Year, we should also hide the Daily rows belonging to those months.
+                // But simplified: just toggle the direct children (Months).
+                // If user re-expands YEAR, the Months appear. If a Month was open, its Daily rows might still be visible? 
+                // No, Daily rows are siblings. We need to hide them too if we want full collapse.
+                // Let's iterate and hide children too if closing.
+                if (!requestShow) {
+                    // We are closing Year. Find relevant Month IDs?
+                    // Hard to select easily without more complex logic. 
+                    // Let's just keep simple toggling. User can close months manually.
+                }
+            });
+
+            if (icon) icon.innerHTML = requestShow ? '&#9660;' : '&#9654;';
+        }
+
+        function toggleMonth(mID) {
+            const rows = document.querySelectorAll(`.month-row-${mID}`);
+            const icon = document.getElementById(`icon-${mID}`);
+            let requestShow = false;
+
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                requestShow = true;
+            }
+
+            rows.forEach(r => {
+                r.style.display = requestShow ? 'table-row' : 'none';
+            });
+
+            if (icon) icon.innerHTML = requestShow ? '&#9660;' : '&#9654;';
+
+            // Prevent event bubbling if row was clickable for filter?
+            // I removed filterHistory on Month row to allow Toggle.
+            // User asked for "Click month ... daily ... dropbox".
+            // So Filter is secondary or removed for Month row?
+            // "Show daily wise" implies accordian.
         }
 
         function renderTradeList(trades) {
@@ -1631,13 +2807,20 @@
             // User didn't specify, but history usually implies order.
             // Let's keep original order (Oldest -> Newest) as per chart.
 
-            tbody.innerHTML = rows.map(t => {
-                return `<tr>
+            // Trade Row
+            // Trade Row
+            document.getElementById('tradeListBody').innerHTML = rows.map(t => {
+                const win = t.pnl > 0;
+                return `<tr class="clickable-row">
                     <td>${t.dateStr}</td>
                     <td class="${t.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(t.pnl)}</td>
+                    <td class="${t.cum >= 0 ? 'text-green' : 'text-red'}">${fmt(t.cum)}</td>
+                    <td>1</td>
+                    <td class="text-green">${win ? 1 : 0}</td>
+                    <td class="text-red">${win ? 0 : 1}</td>
+                    <td>${win ? '100%' : '0%'}</td>
                     <td class="text-green">${fmt(t.displayRU)}</td>
                     <td class="text-red">${fmt(t.displayDD)}</td>
-                    <td class="${t.cum >= 0 ? 'text-green' : 'text-red'}">${fmt(t.cum)}</td>
                     <td style="font-size:0.8em; opacity:0.7;">${t.sourceFile || '-'}</td>
                 </tr>`;
             }).join('');
@@ -1717,6 +2900,42 @@
 
             resEl.textContent = `${count} / ${total} Trades`;
             pctEl.textContent = `${pct}% Reached Target`;
+        }
+
+        function calculateDrawdownHit() {
+            const val = document.getElementById('drawdownTargetInput').value;
+            const resEl = document.getElementById('drawdownTargetResult');
+            const pctEl = document.getElementById('drawdownTargetPercent');
+
+            if (!val || !parsedTrades.length) {
+                resEl.textContent = '-- / --';
+                pctEl.textContent = '--%';
+                return;
+            }
+
+            let target = parseFloat(val);
+            if (isNaN(target)) return;
+
+            // Convert to negative if user enters positive (which is expected for "Drawdown of 1000")
+            if (target > 0) target = -target;
+
+            // Count trades where Drawdown is DEEPER than target (e.g. <= -1000)
+            const count = parsedTrades.filter(t => {
+                let d = t.fileDrawdown;
+                if (d === undefined) {
+                    // Fallback: Use PnL if negative? 
+                    // Better to use 0 if unknown to avoid false positives?
+                    // Or if PnL is -5000, DD was at least -5000.
+                    d = t.pnl < 0 ? t.pnl : 0;
+                }
+                return d <= target;
+            }).length;
+
+            const total = parsedTrades.length;
+            const pct = ((count / total) * 100).toFixed(1);
+
+            resEl.textContent = `${count} / ${total} Trades`;
+            pctEl.textContent = `${pct}% Hit Target`;
         }
     </script>
 </body>
