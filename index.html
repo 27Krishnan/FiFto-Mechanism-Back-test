@@ -418,6 +418,7 @@
         /* Firefox */
         .chip-input[type=number] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .spinner-btns {
@@ -517,6 +518,7 @@
         <nav class="tab-nav">
             <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
             <button class="tab-btn" onclick="switchTab('charts')">Analysis</button>
+            <button class="tab-btn" onclick="switchTab('time-analysis')">Time Analysis</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
         </nav>
 
@@ -721,27 +723,125 @@
                     <canvas id="monthlyChart"></canvas>
                 </div>
             </div>
+
+            <!-- Pie Charts Section -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom:20px;">
+                <div class="glass-panel">
+                    <div class="section-title">Win / Loss Ratio</div>
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="pieWinLoss"></canvas>
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <div class="section-title">Trade Distribution by File</div>
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="pieFileDist"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- TAB: TIME ANALYSIS -->
+        <div id="tab-time-analysis" class="tab-content">
+            <div class="glass-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="section-title" style="margin:0;">Performance by Time of Day</div>
+                    <div
+                        style="display:flex; gap:10px; background:var(--bg-color); padding:4px; border-radius:6px; border:1px solid var(--border-color);">
+                        <label style="cursor:pointer; display:flex; align-items:center; gap:5px; padding:2px 6px;">
+                            <input type="radio" name="timeGrouping" value="15" checked
+                                onchange="renderTimeAnalysis(parsedTrades)">
+                            <span style="font-size:0.85em; color:var(--text-secondary);">15 Min</span>
+                        </label>
+                        <label style="cursor:pointer; display:flex; align-items:center; gap:5px; padding:2px 6px;">
+                            <input type="radio" name="timeGrouping" value="30"
+                                onchange="renderTimeAnalysis(parsedTrades)">
+                            <span style="font-size:0.85em; color:var(--text-secondary);">30 Min</span>
+                        </label>
+                        <label style="cursor:pointer; display:flex; align-items:center; gap:5px; padding:2px 6px;">
+                            <input type="radio" name="timeGrouping" value="60"
+                                onchange="renderTimeAnalysis(parsedTrades)">
+                            <span style="font-size:0.85em; color:var(--text-secondary);">1 Hour</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="height: 350px; position: relative; margin-bottom:30px;">
+                    <canvas id="timeChart"></canvas>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table id="timeTable" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th>Time Slot</th>
+                                <th>Trades</th>
+                                <th>Wins</th>
+                                <th>Losses</th>
+                                <th>Win %</th>
+                                <th>Net P&L</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timeTableBody">
+                            <!-- Injected JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Manual Time Filter Section -->
+                <div style="margin-top:30px; border-top:1px solid var(--border-color); padding-top:20px;">
+                    <div class="subtitle" style="margin-bottom:10px;">Filter Trades by Time</div>
+
+                    <!-- NEW TABS -->
+                    <div
+                        style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border-color);">
+                        <button id="btn-analysis-entry" class="tab-btn active"
+                            onclick="switchAnalysisMode('entry')">Entry Analysis</button>
+                        <button id="btn-analysis-exit" class="tab-btn" onclick="switchAnalysisMode('exit')">Exit
+                            Analysis</button>
+                    </div>
+
+                    <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:20px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label style="color:var(--text-secondary); font-size:0.9em;">From:</label>
+                            <input type="time" id="timeAnalysisStart"
+                                style="background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:6px; outline:none;">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label style="color:var(--text-secondary); font-size:0.9em;">To:</label>
+                            <input type="time" id="timeAnalysisEnd"
+                                style="background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:6px; outline:none;">
+                        </div>
+                        <button onclick="filterTimeAnalysisTrades()" class="primary-btn"
+                            style="padding:4px 12px; font-size:0.9em;">Show Trades</button>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table id="timeTradesTable" style="width:100%; display:none;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Signal</th>
+                                    <th>Price</th>
+                                    <th>Type</th>
+                                    <th>P&L</th>
+                                    <th>File</th>
+                                </tr>
+                            </thead>
+                            <tbody id="timeTradesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Pie Charts Section -->
-        <div
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom:20px;">
-            <div class="glass-panel">
-                <div class="section-title">Win / Loss Ratio</div>
-                <div style="height: 300px; position: relative;">
-                    <canvas id="pieWinLoss"></canvas>
-                </div>
-            </div>
-            <div class="glass-panel">
-                <div class="section-title">Trade Distribution by File</div>
-                <div style="height: 300px; position: relative;">
-                    <canvas id="pieFileDist"></canvas>
-                </div>
-            </div>
-        </div>
+
 
         <!-- TAB 3: HISTORY -->
         <div id="tab-history" class="tab-content">
+
+
             <div class="glass-panel">
                 <div class="section-title">Monthly Breakdown</div>
                 <table id="monthlyTable">
@@ -793,6 +893,8 @@
                 </div>
             </div>
 
+
+
             <div class="glass-panel">
                 <div class="section-title">Trade History</div>
                 <div style="overflow-x: auto;">
@@ -815,8 +917,11 @@
                     </table>
                 </div>
             </div>
+
             <div style="margin-top: 30px; border-left: 4px solid #cf6679; padding-left: 10px; opacity: 0.5;">
                 <strong>Debug:</strong> Last 5 Parsed Trades
+                <div id="debugColumnInfo"
+                    style="font-size:0.75em; color:#94a3b8; margin-bottom:6px; font-family:monospace;"></div>
                 <div style="font-size: 0.8em; margin-top: 5px;">
                     <table style="width: auto;">
                         <thead>
@@ -855,24 +960,28 @@
         let savedMultipliers = {};
         let savedCapitals = {};
         let hiddenFiles = new Set();
+        let latestFileMeta = null; // Global to store debug info
         // No global multiplier variable needed, read from DOM dynamically
 
         // Function to update multiplier and re-render
         function updateMultipliers() {
-            const inputs = document.querySelectorAll('#fileControlsList input');
-            const fileFactors = {};
-            inputs.forEach(inp => {
+            // Update Global State from DOM
+            const multInputs = document.querySelectorAll('#fileControlsList input.chip-input');
+            multInputs.forEach(inp => {
                 const val = parseFloat(inp.value);
-                // Allow 0 or negative? Usually multiplier is positive. 
-                // But let's just parse whatever they type. 
-                // If invalid/empty, default to 1? Or 0? 1 is safer to avoid clearing data.
-                fileFactors[inp.getAttribute('data-filename')] = isNaN(val) ? 1 : val;
+                savedMultipliers[inp.getAttribute('data-filename')] = isNaN(val) ? 1 : val;
+            });
+
+            const capInputs = document.querySelectorAll('#fileControlsList input.cap-input');
+            capInputs.forEach(inp => {
+                const val = parseFloat(inp.value);
+                savedCapitals[inp.getAttribute('data-filename')] = isNaN(val) ? 35000 : val;
             });
 
             if (parsedTrades.length > 0) {
                 // Re-calculate live values from originals
                 parsedTrades.forEach(t => {
-                    const factor = fileFactors[t.sourceFile] !== undefined ? fileFactors[t.sourceFile] : 1;
+                    const factor = savedMultipliers[t.sourceFile] !== undefined ? savedMultipliers[t.sourceFile] : 1;
 
                     if (t.originalPnl !== undefined) t.pnl = t.originalPnl * factor;
                     if (t.originalFileRunUp !== undefined) t.fileRunUp = t.originalFileRunUp * factor;
@@ -888,9 +997,9 @@
             const startStr = document.getElementById('startDateInput').value;
             const endStr = document.getElementById('endDateInput').value;
 
-
             let filtered = parsedTrades.filter(t => !hiddenFiles.has(t.sourceFile));
 
+            // Date Filter
             if (startStr || endStr) {
                 const startTs = startStr ? new Date(startStr).getTime() : 0;
                 // End date: set to end of that day (23:59:59)
@@ -904,6 +1013,11 @@
             calculateAndRender(filtered);
             calculateTargetHit(filtered); // Pass filtered data
             calculateDrawdownHit(filtered);
+
+            // Validate and update other tabs as well
+            if (typeof renderCharts === 'function') renderCharts(filtered);
+            if (typeof renderTradeHistory === 'function') renderTradeHistory(filtered);
+            if (typeof renderTimeAnalysis === 'function') renderTimeAnalysis(filtered);
         }
 
         function clearDateFilters() {
@@ -1223,40 +1337,104 @@
 
             const header = lines[0].toLowerCase().split(',');
             // Column detection logic
-            let typeIdx = -1, dateIdx = -1, pnlIdx = -1, runupIdx = -1, drawdownIdx = -1;
+            let typeIdx = -1, dateIdx = -1, timeIdx = -1, pnlIdx = -1, runupIdx = -1, drawdownIdx = -1;
+            let exitDateIdx = -1;
+            let exitTimeIdx = -1;
+            let priceIdx = -1; // New Price Column
+            let tradeNumIdx = -1; // Trade ID for matching Entry/Exit pairs
+            let netPnlFound = false;
+
+            const clean = (s) => s.replace(/[^a-z0-9\/ %#-]/g, '').trim(); // Remove BOM and weird chars
 
             header.forEach((col, i) => {
-                const c = col.trim();
-                const norm = c.replace(/[^a-z0-9]/g, ''); // runupinr, runup, maxdrawdown
+                const c = clean(col);
+                const norm = c.replace(/[^a-z0-9]/g, '');
 
                 // Relaxed Type matching
-                if (c.includes('type') || c.includes('side') || c.includes('direction')) typeIdx = i;
+                if (c.includes('type') || c.includes('side') || c.includes('direction') || c.includes('signal')) typeIdx = i;
 
-                // Safe Date matching
-                if ((c.includes('exit') || c.includes('close') || c.includes('time')) && (c.includes('date') || c.includes('time'))) dateIdx = i;
-                else if (c === 'date' || c === 'time' || c === 'date/time' || c === 'trade date' || c === 'date/time') {
-                    if (dateIdx === -1) dateIdx = i;
+                // Safe Date matching: Prioritize ENTRY/OPEN date
+                // Check if this column is explicitly an ENTRY or OPEN date/time
+                const isEntry = c.includes('entry') || c.includes('open');
+                const isExit = c.includes('exit') || c.includes('close');
+                const hasDate = c.includes('date');
+                const hasTime = c.includes('time');
+
+                // 1. Entry Date (Date Only or Date/Time)
+                if (isEntry && hasDate) {
+                    dateIdx = i;
+                }
+                // 2. Entry Time (Time Only)
+                else if (isEntry && hasTime && !hasDate) {
+                    timeIdx = i;
+                }
+
+                // Generic Fallbacks (if no Entry Date found yet)
+                // Use relaxed check but strictly ignore exit columns
+                else if (dateIdx === -1 && !isExit && (hasDate || c === 'date/time' || c === 'trade date')) {
+                    dateIdx = i;
+                }
+                // Generic Time Fallback
+                else if (timeIdx === -1 && !isExit && (c === 'time' || c === 'time only')) {
+                    timeIdx = i;
+                }
+                else if (isExit && hasDate) {
+                    exitDateIdx = i; // Store as potential fallback, don't set dateIdx yet
+                }
+
+                // Explicit Time Column (if separate)
+                // Look for "Time" or "Entry Time" but NOT "Date/Time" (which is both)
+                // and NOT "Exit Time" unless we want to fallback? No, precise entry time.
+                const isTimeOnly = (c === 'time' || c === 'entry time' || c === 'open time');
+                if (isTimeOnly) {
+                    timeIdx = i;
+                }
+
+                const isExitTimeOnly = (c === 'exit time' || c === 'close time' || c === 'closing time');
+                if (isExitTimeOnly) {
+                    exitTimeIdx = i;
                 }
 
                 // Check for Percentage
                 const isPct = c.includes('%') || norm.includes('percent') || norm.includes('pct');
+
+                // Price Detection (Excluding P&L and other non-price numericals if possible)
+                // Look for: "Price", "Rate", "Avg Price", "Price INR"
+                if (priceIdx === -1 && !isPct && (c === 'price' || c === 'rate' || c === 'avg. price' || c === 'price inr' || c === 'fill price')) {
+                    priceIdx = i;
+                }
 
                 // Run-up / Drawdown matching
                 // Must exclude percentages to avoid capturing "Run-up %"
                 if ((norm.includes('runup') || norm.includes('runupinr')) && !isPct) runupIdx = i;
                 if (norm.includes('drawdown') && !isPct) drawdownIdx = i;
 
-                // Safe PnL matching
-                // MUST EXCLUDE "Cumulative", "Run-up", "Drawdown", etc.
-                if (
-                    (c.includes('p&l') || c.includes('profit') || (c.includes('net') && c.includes('pl')) || c.includes('gain') || c.includes('loss') || c === 'amount')
-                    && !norm.includes('cumulative')
-                    && !norm.includes('runup') // normalized check covers runup, run-up, etc.
-                    && !norm.includes('drawdown')
-                    && !c.includes('%')
-                    && !c.includes('percent')
-                ) {
-                    pnlIdx = i;
+                // Safe PnL matching logic with Priority
+                // Priority 1: "Net Realized P&L" (Common in some reports)
+                // Priority 2: explicitly "Net P&L" or "Net Profit"
+                // Priority 3: Contains "P&L" or "Profit" but excludes Cumulative/Runup
+
+                const isRealized = c.includes('realized') && (c.includes('p&l') || c.includes('profit') || c.includes('pl'));
+                const isNet = (c.includes('net') && (c.includes('p&l') || c.includes('profit') || c.includes('pl')));
+                const isGeneric = (c.includes('p&l') || c.includes('profit') || c.includes('gain') || c.includes('loss') || c === 'amount');
+                const excluded = norm.includes('cumulative') || norm.includes('runup') || norm.includes('drawdown') || c.includes('%') || c.includes('percent');
+
+                if (!excluded) {
+                    if (isRealized && !c.includes('unrealized')) {
+                        pnlIdx = i;
+                        netPnlFound = true; // Treat realized as definitive
+                    } else if (isNet && !netPnlFound) {
+                        pnlIdx = i;
+                        netPnlFound = true;
+                    } else if (isGeneric && !netPnlFound) {
+                        pnlIdx = i;
+                    }
+                }
+
+                // Trade Number Detection
+                const cNoSpace = c.replace(/\s+/g, '');
+                if (c === '#' || c === 'id' || cNoSpace === 'trade#' || cNoSpace === 'tradeno' || cNoSpace === 'tradenumber' || cNoSpace === 'tradeid' || cNoSpace === 'refno' || c === 'ref') {
+                    tradeNumIdx = i;
                 }
             });
 
@@ -1264,8 +1442,12 @@
             if (typeIdx === -1) typeIdx = 1;
             if (dateIdx === -1) {
                 // Try finding any date col
-                header.forEach((col, i) => { if ((col.includes('date') || col.includes('time')) && dateIdx === -1) dateIdx = i; });
-                if (dateIdx === -1) dateIdx = 2;
+                if (exitDateIdx !== -1) {
+                    dateIdx = exitDateIdx; // Use Exit Date only if no Entry Date found
+                } else {
+                    header.forEach((col, i) => { if ((col.includes('date') || col.includes('time')) && dateIdx === -1) dateIdx = i; });
+                    if (dateIdx === -1) dateIdx = 2; // Last Resort
+                }
             }
             if (pnlIdx === -1) pnlIdx = 7;
 
@@ -1286,37 +1468,178 @@
                 }
             }
             if (commaDecimals > dotDecimals) isEuFormat = true;
+            if (commaDecimals > dotDecimals) isEuFormat = true;
             console.log("Detected Number Format: " + (isEuFormat ? "EU" : "US"));
 
+            // Helper to parse money (Hoisted within processCSV to access isEuFormat)
+            function parseMoney(str) {
+                if (!str) return 0;
+                let val = str.trim();
+                val = val.replace(/[^0-9.,\-()]/g, '');
+                let isNeg = false;
+                if (val.startsWith('(') && val.endsWith(')')) { isNeg = true; val = val.slice(1, -1); }
+                if (isEuFormat) val = val.replace(/\./g, '').replace(/,/g, '.');
+                else val = val.replace(/,/g, '');
+                let num = parseFloat(val);
+                if (isNaN(num)) return 0;
+                return isNeg ? -Math.abs(num) : num;
+            }
+
+            // PASS 1: CACHE ENTRIES (Handle Reverse Order)
+            const entryCache = {}; // Map<TradeNum, { dateStr: string, signal: string }>
+
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',');
+                if (cols.length <= Math.max(typeIdx, dateIdx)) continue;
+
+                if (typeIdx > -1) {
+                    const type = cols[typeIdx];
+                    if (!type) continue;
+                    const isEntry = type.toLowerCase().includes('entry') || type.toLowerCase().includes('open');
+
+                    if (isEntry && tradeNumIdx !== -1) {
+                        // Normalize ID: remove spaces/symbols, lower case
+                        const tradeId = cols[tradeNumIdx].replace(/[^a-z0-9]/gi, '');
+                        let dStr = cols[dateIdx];
+                        if (timeIdx !== -1 && cols[timeIdx]) {
+                            if (dStr && !dStr.includes(':')) dStr += ' ' + cols[timeIdx];
+                        }
+                        if (dStr) {
+                            let ePrice = 0;
+                            if (priceIdx !== -1 && cols[priceIdx]) {
+                                ePrice = parseFloat(cols[priceIdx].replace(/[^0-9.]/g, '')) || 0;
+                            }
+                            entryCache[tradeId] = { date: dStr, signal: type, price: ePrice };
+                        }
+                    }
+                }
+            }
+
+            // PASS 2: PROCESS EXITS (Build Trades)
             for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(',');
                 if (cols.length <= Math.max(typeIdx, dateIdx, pnlIdx)) continue;
 
-                const type = cols[typeIdx];
-                if (!type || (!type.toLowerCase().includes('exit') && !type.toLowerCase().includes('close'))) {
-                    // Filter non-exits
-                    if (!type.toLowerCase().includes('exit') && !type.toLowerCase().includes('close')) continue;
+                let isExit = false;
+                let currentType = '';
+
+                // 1. Check Explicit Type
+                if (typeIdx !== -1 && cols[typeIdx]) {
+                    currentType = cols[typeIdx];
+                    const tLower = currentType.toLowerCase();
+                    const isEntry = tLower.includes('entry') || tLower.includes('open');
+                    // Explicit Exit?
+                    if (tLower.includes('exit') || tLower.includes('close')) {
+                        isExit = true;
+                    }
+
+                    if (isEntry) continue; // Always skip explicitly marked entries in Pass 2
                 }
 
-                const dateStr = cols[dateIdx];
-                let pnlStr = cols[pnlIdx];
-                if (!pnlStr) continue;
+                // 2. Check Implicit Exit via P&L
+                // If not marked as exit yet, check if it has valid P&L
+                if (!isExit) {
+                    let pnlVal = 0;
+                    if (pnlIdx !== -1 && cols.length > pnlIdx) {
+                        pnlVal = parseMoney(cols[pnlIdx]);
+                    }
+                    // If non-zero P&L, treat as Exit (e.g. "Buy" or "Sell" row with profit)
+                    if (Math.abs(pnlVal) > 0.0001) {
+                        isExit = true;
+                    }
+                }
 
-                // Helper to parse money
-                const parseMoney = (str) => {
-                    if (!str) return 0;
-                    let val = str.trim();
-                    val = val.replace(/[^0-9.,\-()]/g, '');
-                    let isNeg = false;
-                    if (val.startsWith('(') && val.endsWith(')')) { isNeg = true; val = val.slice(1, -1); }
-                    if (isEuFormat) val = val.replace(/\./g, '').replace(/,/g, '.');
-                    else val = val.replace(/,/g, '');
-                    let num = parseFloat(val);
-                    if (isNaN(num)) return 0;
-                    return isNeg ? -Math.abs(num) : num;
-                };
+                // 3. Final Check
+                if (!isExit) continue; // Skip if neither explicit nor implicit exit
 
-                const pnl = parseMoney(cols[pnlIdx]);
+                // Ensure data validity
+                if (cols.length <= pnlIdx) continue;
+
+                let dateStr = cols[dateIdx];
+
+                // If we also found a separate Time column, append it
+                // DEFAULT behavior: use timeIdx (which is likely Entry Time).
+                // But for Exit Rows, we might want to check exitTimeIdx first?
+                // Actually, let's capture the 'dateStr' as-is for now, and strictly fix it in the Exit Capture block below.
+                if (timeIdx !== -1 && cols[timeIdx]) {
+                    if (dateStr && !dateStr.includes(':')) {
+                        dateStr += ' ' + cols[timeIdx];
+                    }
+                }
+
+                // Capture EXIT Data (before we overwrite with Entry Cache)
+                // Since Pass 2 iterates Exit rows by default (lines 1460+), 'dateStr', 'cols[timeIdx]', and 'signalName' are currently Exit data.
+                let signalName = (typeIdx > -1 && cols[typeIdx]) ? cols[typeIdx] : '';
+                const exitSignal = signalName || '';
+
+                // Build Specific Exit Date/Time String
+                // If we have a specific Exit Time Column, prefer that over the standard Time Column (which might be Entry Time)
+                let rawExitDateStr = cols[dateIdx];
+                if (exitTimeIdx !== -1 && cols[exitTimeIdx]) {
+                    // Use the specific Exit Time column
+                    if (rawExitDateStr && !rawExitDateStr.includes(':')) {
+                        rawExitDateStr += ' ' + cols[exitTimeIdx];
+                    }
+                } else if (timeIdx !== -1 && cols[timeIdx]) {
+                    // Fallback to standard Time column (might be same as Entry Time if CSV is weird)
+                    if (rawExitDateStr && !rawExitDateStr.includes(':')) {
+                        rawExitDateStr += ' ' + cols[timeIdx];
+                    }
+                }
+
+                const exitDateVal = parseDate(rawExitDateStr); // Use helper to parse Exit Date/Time
+                let exitTimeStr = '';
+                let exitHour = 0;
+                let exitMinute = 0;
+
+                if (exitDateVal) {
+                    exitHour = exitDateVal.getHours();
+                    exitMinute = exitDateVal.getMinutes();
+                    exitTimeStr = `${String(exitHour).padStart(2, '0')}:${String(exitMinute).padStart(2, '0')}`;
+                }
+
+                // Capture EXIT PRICE
+                let exitPrice = 0;
+                if (priceIdx !== -1 && cols[priceIdx]) {
+                    exitPrice = parseFloat(cols[priceIdx].replace(/[^0-9.]/g, '')) || 0;
+                }
+
+                // CHECK CACHE for Entry Time (Override current row's time)
+                if (tradeNumIdx !== -1) {
+                    const tradeId = cols[tradeNumIdx].replace(/[^a-z0-9]/gi, '');
+                    if (entryCache[tradeId]) {
+                        dateStr = entryCache[tradeId].date; // Use the cached Entry Date!
+                        if (entryCache[tradeId].signal) {
+                            signalName = entryCache[tradeId].signal;
+                        }
+                        if (entryCache[tradeId].price) {
+                            // Store Entry Price if found in cache
+                            cols['entryPrice'] = entryCache[tradeId].price; // Temporary storage on cols array logic? No, let's use a variable.
+                        }
+                    }
+                }
+
+                // Retrieve cached Entry Price properly
+                let entryPrice = 0;
+                if (tradeNumIdx !== -1) {
+                    const tradeId = cols[tradeNumIdx].replace(/[^a-z0-9]/gi, '');
+                    if (entryCache[tradeId] && entryCache[tradeId].price) {
+                        entryPrice = entryCache[tradeId].price;
+                    }
+                }
+
+                // Fallback: If signal still says "Exit", force it to "Entry" format
+                // This handles cases where cache lookup fails but we know the direction from the Exit signal.
+                // Fallback Removed per user request ("no automatically renames")
+                // We rely on Two-Pass Cache to find the correct Entry Signal.
+                // if (signalName && signalName.toLowerCase().includes('exit')) ...
+
+                let pnl = 0;
+                try {
+                    // Cleanup currency symbols
+                    if (cols[pnlIdx]) pnl = parseMoney(cols[pnlIdx]);
+                } catch (e) { /* ignore */ }
+                if (isNaN(pnl)) pnl = 0; // Ensure pnl is a number
 
                 // Parse Run-up / Drawdown if available
                 let fileRunUp = undefined;
@@ -1330,10 +1653,33 @@
                 if (!d) continue;
 
                 /* STORE ORIGINALS for Multiplier Logic */
+                // Capture TradeId
+                let tId = '';
+                if (tradeNumIdx !== -1 && cols[tradeNumIdx]) {
+                    tId = cols[tradeNumIdx].replace(/[^a-z0-9]/gi, '');
+                }
+
                 trades.push({
+                    tradeId: tId, // New Field for Dedupe
+                    signalName: signalName,
+                    exitSignal: exitSignal, // New Field
+
                     dateStr: dateStr,
+                    exitDateStr: exitDateVal ? dateStr : dateStr, // Keep original if needed, but we have fields below
+
                     month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
                     daily: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+                    time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+
+                    price: entryPrice,    // Entry Price
+                    exitPrice: exitPrice, // Exit Price
+
+                    exitTime: exitTimeStr, // New Field
+                    exitHour: exitHour,    // New Field
+                    exitMinute: exitMinute,// New Field
+
+                    hour: d.getHours(),
+                    minute: d.getMinutes(),
                     timestamp: d.getTime(),
 
                     pnl: pnl,
@@ -1349,7 +1695,57 @@
                     displayDD: 0
                 });
             }
-            return trades.sort((a, b) => a.timestamp - b.timestamp);
+
+            // Attach Debug Meta to Global
+            latestFileMeta = {
+                dateIdx, pnlIdx, typeIdx,
+                pnlColName: pnlIdx > -1 ? header[pnlIdx] : 'N/A',
+                dateColName: dateIdx > -1 ? header[dateIdx] : 'N/A'
+            };
+
+            // DEDUPLICATION STEP
+            // Remove duplicates where TradeID and P&L are identical (e.g. Entry row has same P&L as Exit row)
+            // Or if TradeID missing, use Timestamp + Price + P&L
+            const uniqueTrades = [];
+            const seenKeys = new Set();
+
+            // Process in reverse? No, linear.
+            // If duplicates exist, we keep the FIRST one we encountered (which usually is Entry if file is sorted old->new).
+            // Actually, Exit rows usually have the P&L. If Entry has it too... it doesn't matter which we keep as long as data is same.
+            // BUT, Exit rows have 'exitTime' populated correctly from my logic?
+            // "Entry" rows might lack exit time if I parsed it from current row.
+            // The "Real" Exit rows has Date = Exit Date.
+            // If I dedupe by TradeID + PNL, I collapse them.
+            // I should prefer the one with LATER Date (Exit Date)?
+
+            // Let's Sort by Timestamp FIRST, then Dedupe?
+            trades.sort((a, b) => a.timestamp - b.timestamp);
+
+            // Prefer keeping the LAST occurrence (likely the Exit row with correct Exit Date)?
+            // Or if I iterate standard, I keep First.
+            // If sorted by Time: Entry is First. Exit is Last.
+            // If duplicate P&L, I want the Exit row?
+            // Actually, if I collapse them, I want the one that represents the trade completion.
+            // Usually the Exit row date is what matters for P&L realization.
+
+            // So, let's use a Map by Key, and overwrite (Keep Last).
+            const tradeMap = new Map();
+            trades.forEach(t => {
+                // Key construction
+                let key = '';
+                if (t.tradeId) {
+                    key = t.tradeId + '_' + t.pnl.toFixed(4); // ID + PnL
+                } else {
+                    // Fallback key
+                    key = t.timestamp + '_' + t.pnl.toFixed(4) + '_' + t.price;
+                }
+                tradeMap.set(key, t); // Overwrite = Keep Last (Exit Row)
+            });
+
+            const dedupedInfo = Array.from(tradeMap.values());
+
+            // Re-sort final result just in case
+            return dedupedInfo.sort((a, b) => a.timestamp - b.timestamp);
         }
         function parseDate(str) {
             if (!str) return null;
@@ -1404,6 +1800,18 @@
             let grossLoss = trades.filter(t => t.pnl <= 0).reduce((acc, t) => acc + Math.abs(t.pnl), 0);
             let maxSingleProfit = Math.max(0, ...trades.map(t => t.pnl));
             let maxSingleLoss = Math.min(0, ...trades.map(t => t.pnl));
+
+            // Calculate Total Capital at the start for global % use
+            const activeFiles = new Set(trades.map(t => t.sourceFile).filter(Boolean));
+            let totalCapital = 0;
+            activeFiles.forEach(file => {
+                const cap = (savedCapitals[file] !== undefined) ? parseFloat(savedCapitals[file]) : 35000;
+                const mult = (savedMultipliers[file] !== undefined) ? parseFloat(savedMultipliers[file]) : 1;
+                totalCapital += (cap * mult);
+            });
+            const fmtPct = (val) => totalCapital > 0 ? ((val / totalCapital) * 100).toFixed(1) + '%' : '0%';
+            // Helper for inline percentage span - SHARP & BRIGHT (No opacity, bold)
+            const pctSpan = (val, color = '') => `<span style="font-size:0.85em; margin-left:6px; font-weight:700; ${color ? 'color:' + color : ''}">(${fmtPct(val)})</span>`;
 
             // Streaks
             let maxWinStreak = 0, currentWinStreak = 0;
@@ -1465,7 +1873,10 @@
                     elTop3.innerHTML = top3Losses.map((l, i) => {
                         return `<div style="display:flex; justify-content:space-between; width:100%; font-size:0.85em; ${(i < 2) ? 'border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:4px;' : ''}">
                             <span>#${i + 1} <span style="opacity:0.75; font-size:0.9em; margin-left:4px;">${formatDate(l.daily)}</span></span>
-                            <span class="text-red" style="font-weight:600;">${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(l.pnl)}</span>
+                            <span class="text-red" style="font-weight:600;">
+                                ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(l.pnl)}
+                                ${pctSpan(l.pnl)}
+                            </span>
                         </div>`;
                     }).join('');
                 } else {
@@ -1491,7 +1902,10 @@
                     elTop3Wins.innerHTML = top3Wins.map((w, i) => {
                         return `<div style="display:flex; justify-content:space-between; width:100%; font-size:0.85em; ${(i < 2) ? 'border-bottom:1px solid #334155; padding-bottom:4px; margin-bottom:4px;' : ''}">
                             <span>#${i + 1} <span style="opacity:0.75; font-size:0.9em; margin-left:4px;">${formatDate(w.daily)}</span></span>
-                            <span class="text-green" style="font-weight:600;">${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(w.pnl)}</span>
+                            <span class="text-green" style="font-weight:600;">
+                                ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(w.pnl)}
+                                ${pctSpan(w.pnl)}
+                            </span>
                         </div>`;
                     }).join('');
                 } else {
@@ -1626,7 +2040,7 @@
                 const recText = recoveryFound
                     ? `<div style="background:rgba(245, 158, 11, 0.15); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column;">
                         <span style="font-size:0.7em; color:#fdba74; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Recovery</span>
-                        <span style="font-size:1.2em; font-weight:800; color:#fb923c;">${recoveryDays} Days</span> 
+                        <span style="font-size:1.2em; font-weight:800; color:#fb923c;">${recoveryDays} Days</span>
                         <span style="font-size:0.75em; color:#fed7aa; margin-top:2px;">End: ${recoveryDateStr}</span>
                        </div>`
                     : `<div style="background:rgba(239, 68, 68, 0.15); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column; justify-content:center;">
@@ -1675,14 +2089,20 @@
 
                         // Construct HTML
                         // Using smaller font for the label/date parts to fit
+                        // Construct HTML
+                        // Using smaller font for the label/date parts to fit
                         elVal.innerHTML = `
                             <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65em; margin-bottom:4px;">
                                 <span style="opacity:0.7">MAX</span>
-                                <span style="color:var(--text-primary); font-weight:700">${fmt(maxSingleRunUp)}</span>
+                                <span class="text-green" style="font-size:1.4em; font-weight:700;">
+                                    ${fmt(maxSingleRunUp)} ${pctSpan(maxSingleRunUp)}
+                                </span>
                             </div>
                             <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65em;">
                                 <span style="opacity:0.7">MIN</span>
-                                <span style="color:var(--text-primary); font-weight:700">${fmt(minSingleRunUp)}</span>
+                                <span style="font-size:1.1em; font-weight:600; opacity:0.9;">
+                                    ${fmt(minSingleRunUp)} ${pctSpan(minSingleRunUp)}
+                                </span>
                             </div>
                         `;
 
@@ -1697,9 +2117,9 @@
                         // Prevent standard setText from overwriting this later?
                         // The setText calls are at the end of the function (lines 920-921).
                         // I need to ensure those standard lines don't overwrite this.
-                        // I should probably remove the setText calls or update the variables to be empty so setText doesn't clobber, 
+                        // I should probably remove the setText calls or update the variables to be empty so setText doesn't clobber,
                         // OR just put this logic AT THE END near the setText calls.
-                        // The user wanted "same box". 
+                        // The user wanted "same box".
 
                         // If I modify this here, the `setText` at lines 920 will overwrite it.
                         // I must modify the setText calls at the bottom OR set a flag.
@@ -1729,8 +2149,8 @@
                 });
 
                 if (maxSingleDD < 0) {
-                    maxDD = Math.abs(maxSingleDD); // Display as positive number usually, or keep sign? 
-                    // EXISTING VISUALS: Card usually shows "-$4000" in red. 
+                    maxDD = Math.abs(maxSingleDD); // Display as positive number usually, or keep sign?
+                    // EXISTING VISUALS: Card usually shows "-$4000" in red.
                     // However, `maxDD` variable is usually POSITIVE in calculation (dd = running - peak, which is negative...)
                     // Wait, original: `dd = running - peak` (negative). `if (dd < maxDD)` (maxDD init 0).
                     // So `maxDD` stores a NEGATIVE number.
@@ -1750,17 +2170,50 @@
             setText('losingTrades', `${losses} (${totalTrades ? ((losses / totalTrades) * 100).toFixed(1) : 0}%)`);
             setText('winRateDisplay', `${totalTrades ? ((wins / totalTrades) * 100).toFixed(1) : 0}%`);
 
-            setText('totalNetProfit', fmt(totalNetPL));
-            setText('grossProfit', fmt(grossProfit));
-            setText('grossLoss', fmt(-grossLoss)); // Show as negative amount
+            // Perform ROI Calculation
+            // 1. Identify unique active files in the current filtered set
 
-            setText('avgProfit', totalTrades ? fmt(totalNetPL / totalTrades) : fmt(0));
+
+            // Calculate ROI for display
+            const roi = totalCapital > 0 ? ((totalNetPL / totalCapital) * 100).toFixed(1) : 0;
+            const roiColor = roi >= 0 ? '#4ade80' : '#f87171';
+
+            // Display Profit + ROI
+            const profitEl = document.getElementById('totalNetProfit');
+            if (profitEl) {
+                const pnlFormatted = fmt(totalNetPL);
+                profitEl.innerHTML = `
+                    ${pnlFormatted}
+                    <div style="font-size:0.6em; margin-top:8px; font-weight:700; color:var(--text-secondary);">
+                        ROI: <span style="color:${roiColor}; font-size:1.1em; margin-right:4px;">${roi}%</span>
+                        <span style="opacity:0.8; font-size:0.9em; font-weight:500;">(on ${fmt(totalCapital)})</span>
+                    </div>
+                `;
+            }
+            // setText('totalNetProfit', fmt(totalNetPL)); // Replaced by block above
+
+            const gpEl = document.getElementById('grossProfit');
+            if (gpEl) gpEl.innerHTML = `${fmt(grossProfit)} ${pctSpan(grossProfit)}`;
+
+            const glEl = document.getElementById('grossLoss');
+            if (glEl) glEl.innerHTML = `${fmt(-grossLoss)} ${pctSpan(-grossLoss)}`;
+
+            const elDebug = document.getElementById('debugTableBody');
+            const elDebugInfo = document.getElementById('debugColumnInfo');
+
+            if (elDebugInfo && latestFileMeta) {
+                elDebugInfo.innerHTML = `Dataset Columns: Date='${latestFileMeta.dateColName}' (${latestFileMeta.dateIdx}), P&L='${latestFileMeta.pnlColName}' (${latestFileMeta.pnlIdx})`;
+            }
+
             setText('avgProfit', totalTrades ? fmt(totalNetPL / totalTrades) : fmt(0));
 
             const valAvgWin = wins ? grossProfit / wins : 0;
             const valAvgLoss = losses ? Math.abs(grossLoss) / losses : 0;
-            setText('avgWinner', fmt(valAvgWin));
-            setText('avgLoser', fmt(-valAvgLoss));
+            const avgWinEl = document.getElementById('avgWinner');
+            if (avgWinEl) avgWinEl.innerHTML = `${fmt(valAvgWin)} ${pctSpan(valAvgWin)}`;
+
+            const avgLossEl = document.getElementById('avgLoser');
+            if (avgLossEl) avgLossEl.innerHTML = `${fmt(-valAvgLoss)} ${pctSpan(-valAvgLoss)}`;
 
             // Populate Risk Reward Ratio
             const elRr = document.getElementById('rrRatio');
@@ -1771,11 +2224,13 @@
                 if (valAvgLoss > 0) ratio = valAvgWin / valAvgLoss;
                 elRr.textContent = `1 : ${ratio.toFixed(2)}`;
                 elRr.className = ratio >= 1.5 ? 'stats-card-value text-green' : (ratio >= 1.0 ? 'stats-card-value text-primary' : 'stats-card-value text-red');
-                elRrWin.textContent = fmt(valAvgWin);
-                elRrLoss.textContent = fmt(-valAvgLoss);
+                elRrWin.innerHTML = `${fmt(valAvgWin)} ${pctSpan(valAvgWin)}`;
+                elRrLoss.innerHTML = `${fmt(-valAvgLoss)} ${pctSpan(-valAvgLoss)}`;
             }
 
-            setText('maxDrawdown', fmt(maxDD));
+            const maxDDEl = document.getElementById('maxDrawdown');
+            if (maxDDEl) maxDDEl.innerHTML = `${fmt(maxDD)} <div style="font-size:0.5em; opacity:0.75; margin-top:4px;">${pctSpan(maxDD)}</div>`;
+
             const elDD = document.getElementById('maxDrawdownDateRange');
             if (elDD) elDD.innerHTML = ddRange;
 
@@ -1784,13 +2239,19 @@
                 setText('maxRunupDateRange', runUpRange);
             }
 
-            setText('maxWinStreak', `${maxWinStreak} Trades`);
-            setText('maxWinStreakDate', maxWinRange);
-            setText('maxWinStreakAmount', fmt(maxWinStreakAmt));
+            const elBestStr = document.getElementById('maxWinStreak');
+            if (elBestStr) elBestStr.innerHTML = `${maxWinStreak} <span style="font-size:0.5em; opacity:0.7;">Trades</span>`;
+            setText('maxWinStreakDate', maxWinRange || '(-)');
+            const elBestAmt = document.getElementById('maxWinStreakAmount');
+            if (elBestAmt && maxWinStreak > 0) elBestAmt.innerHTML = `<span class="text-green">${fmt(maxWinStreakAmt)} ${pctSpan(maxWinStreakAmt)}</span>`;
+            else if (elBestAmt) elBestAmt.textContent = '--';
 
-            setText('maxLoseStreak', `${maxLoseStreak} Trades`);
-            setText('maxLoseStreakDate', maxLoseRange);
-            setText('maxLoseStreakAmount', fmt(maxLoseStreakAmt));
+            const elWorstStr = document.getElementById('maxLoseStreak');
+            if (elWorstStr) elWorstStr.innerHTML = `${maxLoseStreak} <span style="font-size:0.5em; opacity:0.7;">Trades</span>`;
+            setText('maxLoseStreakDate', maxLoseRange || '(-)');
+            const elWorstAmt = document.getElementById('maxLoseStreakAmount');
+            if (elWorstAmt && maxLoseStreak > 0) elWorstAmt.innerHTML = `<span class="text-red">${fmt(maxLoseStreakAmt)} ${pctSpan(maxLoseStreakAmt)}</span>`;
+            else if (elWorstAmt) elWorstAmt.textContent = '--';
 
             // Render Charts & Tables
             // Render Charts & Tables
@@ -2340,12 +2801,24 @@
             // 3. Render Body
             const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
 
+            let lastYear = null;
+            let useAltBg = false;
+
             tbody.innerHTML = sortedMonths.map(m => {
                 if (m === 'Unknown') return ''; // Skip invalid dates
+
+                // Year Highlight Logic
+                const yr = m.substring(0, 4);
+                if (yr !== lastYear) {
+                    useAltBg = !useAltBg;
+                    lastYear = yr;
+                }
+                const bgStyle = useAltBg ? 'background:rgba(255,255,255,0.03);' : '';
+
                 const rowData = pivot[m];
                 const totalClass = rowData.total >= 0 ? 'text-green' : 'text-red';
 
-                let rowHTML = `<tr>
+                let rowHTML = `<tr style="${bgStyle}">
                     <td>${m}</td>
                     <td class="${totalClass}" style="font-weight:bold">${fmt(rowData.total)}</td>`;
 
@@ -2388,6 +2861,194 @@
             });
         }
 
+        let timeChart = null;
+        function renderTimeAnalysis(trades) {
+            // Get Bucket Size
+            const bucketSize = parseInt(document.querySelector('input[name="timeGrouping"]:checked').value);
+
+            // Bucket Logic
+            const buckets = {};
+
+            trades.forEach(t => {
+                const totalMinutes = t.hour * 60 + t.minute;
+                const slotIndex = Math.floor(totalMinutes / bucketSize);
+                const slotStartMin = slotIndex * bucketSize;
+
+                const h = Math.floor(slotStartMin / 60);
+                const m = slotStartMin % 60;
+                const label = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+                if (!buckets[label]) buckets[label] = {
+                    label,
+                    pnl: 0,
+                    count: 0,
+                    wins: 0,
+                    losses: 0,
+                    sortKey: slotStartMin
+                };
+
+                buckets[label].pnl += t.pnl;
+                buckets[label].count++;
+                if (t.pnl > 0) buckets[label].wins++;
+                else buckets[label].losses++;
+            });
+
+            const sortedBuckets = Object.values(buckets).sort((a, b) => a.sortKey - b.sortKey);
+
+            // Render Chart
+            const ctx = document.getElementById('timeChart').getContext('2d');
+            if (timeChart) timeChart.destroy();
+
+            timeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedBuckets.map(b => b.label),
+                    datasets: [{
+                        label: 'Net P&L',
+                        data: sortedBuckets.map(b => b.pnl),
+                        backgroundColor: sortedBuckets.map(b => b.pnl >= 0 ? '#10b981' : '#ef4444'),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Render Table
+            const tbody = document.getElementById('timeTableBody');
+            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
+
+            tbody.innerHTML = sortedBuckets.map(b => {
+                const winRate = b.count ? ((b.wins / b.count) * 100).toFixed(1) + '%' : '0%';
+                return `
+                    <tr>
+                        <td style="font-weight:bold">${b.label}</td>
+                        <td>${b.count}</td>
+                        <td class="text-green">${b.wins}</td>
+                        <td class="text-red">${b.losses}</td>
+                        <td>${winRate}</td>
+                        <td class="${b.pnl >= 0 ? 'text-green' : 'text-red'}" style="font-weight:700;">${fmt(b.pnl)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        let currentAnalysisMode = 'entry'; // 'entry' or 'exit'
+
+        function switchAnalysisMode(mode) {
+            currentAnalysisMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-analysis-${mode}`).classList.add('active');
+            filterTimeAnalysisTrades(); // Re-render with new mode
+        }
+
+        function filterTimeAnalysisTrades() {
+            let startStr = document.getElementById('timeAnalysisStart').value;
+            let endStr = document.getElementById('timeAnalysisEnd').value;
+            const table = document.getElementById('timeTradesTable');
+            const tbody = document.getElementById('timeTradesBody');
+
+            if (!startStr && !endStr) {
+                alert("Please select a Start Time, End Time, or both.");
+                return;
+            }
+
+            // Support Single Time Entry (Exact Match)
+            if (startStr && !endStr) endStr = startStr;
+            if (!startStr && endStr) startStr = endStr;
+
+            // Helper to mins
+            const toMins = (str) => {
+                const [h, m] = str.split(':').map(Number);
+                return h * 60 + m;
+            };
+            const startMins = toMins(startStr);
+            const endMins = toMins(endStr);
+
+            // Filter CURRENT parsedTrades (respecting global date filter too? 
+            // User likely expects global date filter to apply, then SUB-filter by time.
+            // Let's use the 'parsedTrades' but adhere to hiddenFiles.
+            // AND adhere to global Date Filter? 
+            // Yes, "Show trades" implies consistent view.
+
+            // Re-apply global date filter logic locally or just use calculateAndRender's input?
+            // Actually, best is to filter from 'parsedTrades' but check dates manually here 
+            // OR use a cached 'filteredTrades' global? We don't have one.
+            // Let's re-implement Date check for safety.
+
+            const globalStartStr = document.getElementById('startDateInput').value;
+            const globalEndStr = document.getElementById('endDateInput').value;
+            const gStartTs = globalStartStr ? new Date(globalStartStr).getTime() : 0;
+            const gEndTs = globalEndStr ? new Date(globalEndStr).setHours(23, 59, 59, 999) : Number.MAX_SAFE_INTEGER;
+
+            const results = parsedTrades.filter(t => {
+                if (hiddenFiles.has(t.sourceFile)) return false;
+                if (t.timestamp < gStartTs || t.timestamp > gEndTs) return false;
+
+                if (t.hour === undefined) return false;
+
+                let tMins = 0;
+                if (currentAnalysisMode === 'entry') {
+                    // Use Entry Time
+                    tMins = t.hour * 60 + t.minute;
+                } else {
+                    // Use Exit Time (if captured, otherwise skip or fallback??)
+                    // If exit details missing, maybe exclude?
+                    if (t.exitHour === undefined) return false;
+                    tMins = t.exitHour * 60 + t.exitMinute;
+                }
+
+                return tMins >= startMins && tMins <= endMins;
+            });
+
+            // Render
+            table.style.display = 'table';
+            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
+
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No trades found in this time range.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = results.map(t => {
+                // Determine values based on MODE
+                let displayTime = t.time;
+                let displaySignal = t.signalName || '-';
+                let displayPrice = t.price || 0; // Default to Entry Price
+
+                if (currentAnalysisMode === 'exit') {
+                    displayTime = t.exitTime || '-';
+                    displaySignal = t.exitSignal || '-';
+                    displayPrice = t.exitPrice || 0;
+                } else {
+                    // ENTRY MODE FORCE FIX:
+                    // Even if data linking failed and we have "Exit Long", showing it in "Entry Analysis" is confusing.
+                    // Force the label to match the view's intent.
+                    if (displaySignal.toLowerCase().includes('exit')) {
+                        displaySignal = displaySignal.replace(/Exit/i, 'Entry').replace(/Close/i, 'Open');
+                    }
+                }
+
+                return `
+                <tr>
+                    <td>${t.dateStr.split(' ')[0]}</td> <!-- Show Date Only -->
+                    <td>${displayTime}</td>
+                    <td style="color:var(--accent-color);">${displaySignal}</td>
+                    <td>${fmt(displayPrice)}</td>
+                    <td>${t.pnl >= 0 ? 'WIN' : 'LOSS'}</td>
+                    <td class="${t.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(t.pnl)}</td>
+                    <td style="font-size:0.8em; opacity:0.7;">${t.sourceFile}</td>
+                </tr>`;
+            }).join('');
+        }
+
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
@@ -2424,8 +3085,9 @@
                     const winRate = yr.count ? ((yr.wins / yr.count) * 100).toFixed(1) : 0;
 
                     // Year Header Row
+                    // Year Header Row
                     html += `
-                        <tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleYear('${y}')">
+                <tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleYear('${y}')">
                             <td style="display:flex; align-items:center; gap:8px;">
                                 <span id="icon-${y}">&#9654;</span> ${y} 
                                 <span style="font-size:0.8em; opacity:0.7; font-weight:400;">(${yr.count} trades)</span>
@@ -2438,9 +3100,9 @@
                             <td>${winRate}%</td>
                             <td>-</td>
                             <td>-</td>
-                            <td>-</td> <!-- File Col -->
+                            <td>-</td> <!--File Col-->
                         </tr>
-                    `;
+                `;
 
                     // Month Rows
                     yr.rows.forEach(row => {
@@ -2449,7 +3111,7 @@
                         const mID = row.label; // YYYY-MM
 
                         html += `
-                            <tr class="year-row-${y} clickable-row" style="display:none; background:#0f172a;" onclick="toggleMonth('${mID}')" title="Click to view daily details">
+                <tr class="year-row-${y} clickable-row" style="display:none; background:#0f172a;" onclick="toggleMonth('${mID}')" title="Click to view daily details">
                                 <td style="padding-left:30px; font-size:0.95em; color:var(--text-secondary); border-left: 2px solid var(--border-color); display:flex; align-items:center; gap:5px;">
                                     <span id="icon-${mID}" style="font-size:0.8em; width:12px;">&#9654;</span> ${row.label}
                                 </td>
@@ -2461,9 +3123,9 @@
                                 <td>${rowWin}</td>
                                 <td class="text-green">${fmt(row.maxRunUp)}</td>
                                 <td class="text-red">${fmt(row.maxDD)}</td>
-                                <td>-</td> <!-- File Col -->
+                                <td>-</td> <!--File Col-->
                             </tr>
-                        `;
+                `;
 
                         // Daily Rows (Level 3)
                         if (row.dailyBreakdown) {
@@ -2476,13 +3138,13 @@
                                 const filesInfo = Array.from(day.files).join(', '); // Join file names
 
                                 const [y, m, d] = dayDate.split('-');
-                                const fmtDate = `${d}-${m}-${y}`;
+                                const fmtDate = `${d} - ${m} - ${y} `;
                                 const dateID = dayDate; // YYYY-MM-DD
                                 const hasFiles = day.fileStats && Object.keys(day.fileStats).length > 0;
                                 const expandCursor = hasFiles ? 'cursor:pointer;' : '';
 
                                 html += `
-                                    <tr class="month-row-${mID}" style="display:none; background:#020617; font-size:0.85em; ${expandCursor}" ${hasFiles ? `onclick="toggleDate('${dateID}')"` : ''}>
+            <tr class="month-row-${mID}" style="display:none; background:#020617; font-size:0.85em; ${expandCursor}" ${hasFiles ? `onclick="toggleDate('${dateID}')"` : ''}>
                                         <td style="padding-left:60px; color:var(--text-secondary); border-left: 2px solid var(--border-color); white-space:nowrap; display:flex; align-items:center; gap:5px;">
                                             ${hasFiles ? `<span id="icon-date-${dateID}" style="font-size:0.8em; width:12px;">&#9654;</span>` : ''} 
                                             ${fmtDate}
@@ -2497,7 +3159,7 @@
                                         <td class="text-red" style="white-space:nowrap;">${fmt(day.maxDD)}</td>
                                         <td style="color:var(--text-secondary); font-size:0.9em; white-space:nowrap;">${filesInfo}</td>
                                     </tr>
-                                `;
+            `;
 
                                 // Level 4: File Rows
                                 if (hasFiles) {
@@ -2506,7 +3168,7 @@
                                         const fWin = ((fStat.wins / fStat.count) * 100).toFixed(1) + '%';
 
                                         html += `
-                                            <tr class="date-row-${dateID}" style="display:none; background:#000000; font-size:0.8em; border-left: 3px solid var(--accent-color);">
+            <tr class="date-row-${dateID}" style="display:none; background:#000000; font-size:0.8em; border-left: 3px solid var(--accent-color);">
                                                 <td style="padding-left:90px; color:#94a3b8; font-style:italic;">${fName}</td>
                                                 <td class="${fStat.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(fStat.pnl)}</td>
                                                 <td style="opacity:0.3">-</td> 
@@ -2518,7 +3180,7 @@
                                                 <td class="text-red">${fmt(fStat.maxDD)}</td>
                                                 <td style="opacity:0.5">-</td>
                                             </tr>
-                                        `;
+            `;
                                     });
                                 }
                             });
@@ -2603,7 +3265,7 @@
 
                 // Year Row
                 html += `
-                    <tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleCoincYear('${y}')">
+            <tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleCoincYear('${y}')">
                         <td style="display:flex; align-items:center; gap:8px;">
                             <span id="icon-${yrId}">&#9654;</span> ${y} 
                             <span style="font-size:0.8em; opacity:0.7; font-weight:400;">(${yr.count} coincident days)</span>
@@ -2612,7 +3274,7 @@
                         <td>-</td>
                         <td>-</td>
                     </tr>
-                `;
+            `;
 
                 // Month Rows
                 Object.keys(yr.months).sort().reverse().forEach(m => {
@@ -2620,7 +3282,7 @@
                     const moId = `coinc-mo-${m}`; // YYYY-MM
 
                     html += `
-                        <tr class="${yrId}" style="display:none; background:#0f172a; cursor:pointer;" onclick="toggleCoincMonth('${m}')">
+            <tr class="${yrId}" style="display:none; background:#0f172a; cursor:pointer;" onclick="toggleCoincMonth('${m}')">
                             <td style="padding-left:30px; border-left: 2px solid var(--border-color); display:flex; align-items:center; gap:5px;">
                                 <span id="icon-${moId}" style="font-size:0.8em; width:12px;">&#9654;</span> ${m}
                                 <span style="font-size:0.8em; opacity:0.7;">(${mo.count} days)</span>
@@ -2629,7 +3291,7 @@
                             <td>-</td>
                             <td>-</td>
                         </tr>
-                    `;
+            `;
 
                     // Day Rows
                     mo.days.forEach(d => {
@@ -2637,18 +3299,18 @@
                             const val = d.fileDetails[f];
                             const cls = val >= 0 ? 'text-green' : 'text-red';
                             return `<span style="display:inline-block; background:#1e293b; padding:2px 8px; border-radius:12px; margin-right:6px; font-size:0.85em; border:1px solid #334155;">
-                                <span style="color:#e2e8f0;">${f}</span>: <span class="${cls}" style="font-weight:600;">${fmt(val)}</span>
+            <span style="color:#e2e8f0;">${f}</span>: <span class="${cls}" style="font-weight:600;">${fmt(val)}</span>
                             </span>`;
                         }).join(' ');
 
                         html += `
-                            <tr class="${moId} ${yrId}-child" style="display:none; background:#020617;">
+            <tr class="${moId} ${yrId}-child" style="display:none; background:#020617;">
                                 <td style="padding-left:60px; color:var(--text-secondary); border-left: 2px solid var(--border-color);">${d.dateStr}</td>
                                 <td class="${d.pnl >= 0 ? 'text-green' : 'text-red'}" style="font-weight:700;">${fmt(d.pnl)}</td>
                                 <td>${d.files.size}</td>
                                 <td>${fileBadges}</td>
                             </tr>
-                        `;
+            `;
                     });
                 });
             });
@@ -2675,7 +3337,7 @@
 
                 if (show) {
                     // Only show Month rows directly (not children of months)
-                    // My class structure: Month Row has class `yrId`. Day Row has class `moId` AND `yrId-child`.
+                    // My class structure: Month Row has class `yrId`. Day Row has class `moId` AND `yrId - child`.
                     // Wait, Day Row needs to be hidden if Month is NOT expanded.
                     // Let's rely on specific classes.
                     if (!r.classList.contains(`${yrId}-child`)) {
@@ -2684,10 +3346,10 @@
                 } else {
                     r.style.display = 'none'; // Hide month rows
                     // Also hide children?
-                    // Day rows have class `${moId}`. 
-                    // This selector `.${yrId}` selects Month rows.
+                    // Day rows have class `${ moId } `. 
+                    // This selector `.${ yrId } ` selects Month rows.
                     // I need to select children too?
-                    // Or add `${yrId}` class to children too? NO.
+                    // Or add `${ yrId } ` class to children too? NO.
                 }
             });
 
@@ -2826,8 +3488,8 @@
             }).join('');
 
             document.getElementById('debugTableBody').innerHTML = trades.slice(-5).map(t => `
-                <tr><td>${t.dateStr}</td><td>Exit</td><td>${t.pnl}</td></tr>
-            `).join('');
+            <tr><td>${t.dateStr}</td><td>Exit</td><td>${t.pnl}</td></tr>
+                `).join('');
         }
 
         // Filter Logic
