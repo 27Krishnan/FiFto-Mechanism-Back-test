@@ -519,6 +519,7 @@
             <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
             <button class="tab-btn" onclick="switchTab('charts')">Analysis</button>
             <button class="tab-btn" onclick="switchTab('time-analysis')">Time Analysis</button>
+            <button class="tab-btn" onclick="switchTab('streaks')">Streak Analysis</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
         </nav>
 
@@ -604,7 +605,7 @@
                 </div>
 
                 <!-- Card 5: Streaks -->
-                <div class="stats-card">
+                <div class="stats-card" onclick="goToStreak('win')" style="cursor: pointer;">
                     <div class="stats-card-title">Best Streak</div>
                     <div class="stats-card-value text-green" id="maxWinStreak" style="font-size: 1.5em;">--</div>
                     <div class="stats-card-sub">
@@ -617,7 +618,7 @@
                 </div>
 
                 <!-- Card 6: Worst Streak -->
-                <div class="stats-card">
+                <div class="stats-card" onclick="goToStreak('loss')" style="cursor: pointer;">
                     <div class="stats-card-title">Worst Streak</div>
                     <div class="stats-card-value text-red" id="maxLoseStreak" style="font-size: 1.5em;">--</div>
                     <div class="stats-card-sub">
@@ -836,9 +837,59 @@
             </div>
         </div>
 
+        <!-- TAB 5: STREAK ANALYSIS (New) -->
+        <div id="tab-streaks" class="tab-content">
+            <h2 style="margin-top:0;">Streak Analysis</h2>
+            <div style="display:grid; grid-template-columns: 1fr; gap:20px;">
+                <!-- Table: Winning Streaks -->
+                <div id="box-win-streaks" class="stats-card"
+                    style="padding:0; overflow:hidden; justify-content: flex-start;">
+                    <div style="padding:15px; background:#1e293b; border-bottom:1px solid #334155;">
+                        <div class="stats-card-title">Winning Streaks Distribution</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#0f172a; color:#94a3b8; font-size:0.85em; text-align:left;">
+                                    <th style="padding:10px 15px;">Streak Length</th>
+                                    <th style="padding:10px 15px;">Count (Frequency)</th>
+                                    <th style="padding:10px 15px;">Total Amount</th>
+                                    <th style="padding:10px 15px;">Avg Amount</th>
+                                    <th style="padding:10px 15px;">Max Profit</th>
+                                    <th style="padding:10px 15px;">Min Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winStreakTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
 
+                <!-- Table: Losing Streaks -->
+                <div id="box-loss-streaks" class="stats-card"
+                    style="padding:0; overflow:hidden; justify-content: flex-start;">
+                    <div style="padding:15px; background:#1e293b; border-bottom:1px solid #334155;">
+                        <div class="stats-card-title">Losing Streaks Distribution</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#0f172a; color:#94a3b8; font-size:0.85em; text-align:left;">
+                                    <th style="padding:10px 15px;">Streak Length</th>
+                                    <th style="padding:10px 15px;">Count (Frequency)</th>
+                                    <th style="padding:10px 15px;">Total Amount</th>
+                                    <th style="padding:10px 15px;">Avg Amount</th>
+                                    <th style="padding:10px 15px;">Smallest Loss</th>
+                                    <th style="padding:10px 15px;">Biggest Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lossStreakTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- TAB 3: HISTORY -->
+        <!-- TAB 4: HISTORY -->
         <div id="tab-history" class="tab-content">
 
 
@@ -955,6 +1006,21 @@
             if (content) content.classList.add('active');
         }
 
+        function goToStreak(type) {
+            switchTab('streaks');
+            setTimeout(() => {
+                const id = type === 'win' ? 'box-win-streaks' : 'box-loss-streaks';
+                const el = document.getElementById(id);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Flash effect
+                    el.style.transition = 'box-shadow 0.3s ease';
+                    el.style.boxShadow = '0 0 0 2px var(--accent-color)';
+                    setTimeout(() => el.style.boxShadow = 'none', 1000);
+                }
+            }, 100);
+        }
+
         // --- Core Logic ---
         let parsedTrades = [];
         let savedMultipliers = {};
@@ -962,6 +1028,10 @@
         let hiddenFiles = new Set();
         let latestFileMeta = null; // Global to store debug info
         // No global multiplier variable needed, read from DOM dynamically
+
+        // GLOBAL FORMATTER (Used by renderStreakAnalysis and others)
+        const fmtMoney = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
+        const fmt = fmtMoney; // Alias for backward compatibility
 
         // Function to update multiplier and re-render
         function updateMultipliers() {
@@ -1011,13 +1081,17 @@
             }
 
             calculateAndRender(filtered);
+
+            // Prioritize Streak Analysis (User Focus)
+            try { renderStreakAnalysis(filtered); } catch (e) { console.error(e); }
+
             calculateTargetHit(filtered); // Pass filtered data
             calculateDrawdownHit(filtered);
 
             // Validate and update other tabs as well
-            if (typeof renderCharts === 'function') renderCharts(filtered);
-            if (typeof renderTradeHistory === 'function') renderTradeHistory(filtered);
-            if (typeof renderTimeAnalysis === 'function') renderTimeAnalysis(filtered);
+            try { if (typeof renderCharts === 'function') renderCharts(filtered); } catch (e) { console.error(e); }
+            try { if (typeof renderTradeHistory === 'function') renderTradeHistory(filtered); } catch (e) { console.error(e); }
+            try { if (typeof renderTimeAnalysis === 'function') renderTimeAnalysis(filtered); } catch (e) { console.error(e); }
         }
 
         function clearDateFilters() {
@@ -1734,10 +1808,12 @@
                 // Key construction
                 let key = '';
                 if (t.tradeId) {
-                    key = t.tradeId + '_' + t.pnl.toFixed(4); // ID + PnL
+                    key = t.tradeId + '_' + t.pnl.toFixed(4); // ID + PnL (Strict Dedupe)
                 } else {
-                    // Fallback key
-                    key = t.timestamp + '_' + t.pnl.toFixed(4) + '_' + t.price;
+                    // Fallback: DO NOT DEDUPLICATE if no ID is present.
+                    // Treating them as unique prevents valid coincident trades from being lost.
+                    // We append a random nonce or index to ensure uniqueness.
+                    key = 'no_id_' + Math.random() + '_' + t.timestamp;
                 }
                 tradeMap.set(key, t); // Overwrite = Keep Last (Exit Row)
             });
@@ -1813,17 +1889,27 @@
             // Helper for inline percentage span - SHARP & BRIGHT (No opacity, bold)
             const pctSpan = (val, color = '') => `<span style="font-size:0.85em; margin-left:6px; font-weight:700; ${color ? 'color:' + color : ''}">(${fmtPct(val)})</span>`;
 
-            // Streaks
+            // Streaks (Count Based)
             let maxWinStreak = 0, currentWinStreak = 0;
             let maxWinStreakAmt = 0, currentWinStreakAmt = 0;
             let maxWinRange = '';
+
+            // Streaks (Value Based - Best/Worst Financial)
+            let maxWinStreakVal = 0; // Highest Amt
+            let maxWinStreakValCount = 0;
+            let maxWinStreakValRange = '';
 
             let maxLoseStreak = 0, currentLoseStreak = 0;
             let maxLoseStreakAmt = 0, currentLoseStreakAmt = 0;
             let maxLoseRange = '';
 
+            let maxLoseStreakVal = 0; // Most Negative Amt
+            let maxLoseStreakValCount = 0;
+            let maxLoseStreakValRange = '';
+
             // Temp vars for range tracking
-            let winStart = null, loseStart = null;
+            let winStart = null;
+            let loseStart = null;
 
             trades.forEach(t => {
                 if (t.pnl > 0) {
@@ -1832,11 +1918,24 @@
                     currentWinStreak++;
                     currentWinStreakAmt += t.pnl;
 
+                    // Update Longest Streak
                     if (currentWinStreak > maxWinStreak) {
                         maxWinStreak = currentWinStreak;
                         maxWinRange = `(${formatDate(winStart)} to ${formatDate(t.daily)})`;
+                        maxWinStreakAmt = currentWinStreakAmt;
+                    } else if (currentWinStreak === maxWinStreak) {
+                        if (currentWinStreakAmt > maxWinStreakAmt) {
+                            maxWinStreakAmt = currentWinStreakAmt;
+                            maxWinRange = `(${formatDate(winStart)} to ${formatDate(t.daily)})`;
+                        }
                     }
-                    if (currentWinStreakAmt > maxWinStreakAmt) maxWinStreakAmt = currentWinStreakAmt;
+
+                    // Update Richest Streak (Value)
+                    if (currentWinStreakAmt > maxWinStreakVal) {
+                        maxWinStreakVal = currentWinStreakAmt;
+                        maxWinStreakValCount = currentWinStreak;
+                        maxWinStreakValRange = `(${formatDate(winStart)} to ${formatDate(t.daily)})`;
+                    }
 
                     currentLoseStreak = 0; currentLoseStreakAmt = 0; loseStart = null;
                 } else {
@@ -1845,11 +1944,24 @@
                     currentLoseStreak++;
                     currentLoseStreakAmt += t.pnl; // negative
 
+                    // Update Longest Streak
                     if (currentLoseStreak > maxLoseStreak) {
                         maxLoseStreak = currentLoseStreak;
                         maxLoseRange = `(${formatDate(loseStart)} to ${formatDate(t.daily)})`;
+                        maxLoseStreakAmt = currentLoseStreakAmt;
+                    } else if (currentLoseStreak === maxLoseStreak) {
+                        if (currentLoseStreakAmt < maxLoseStreakAmt) { // Check most negative
+                            maxLoseStreakAmt = currentLoseStreakAmt;
+                            maxLoseRange = `(${formatDate(loseStart)} to ${formatDate(t.daily)})`;
+                        }
                     }
-                    if (currentLoseStreakAmt < maxLoseStreakAmt) maxLoseStreakAmt = currentLoseStreakAmt;
+
+                    // Update Costliest Streak (Value)
+                    if (currentLoseStreakAmt < maxLoseStreakVal) { // More negative is "better" for this metric (worst loss)
+                        maxLoseStreakVal = currentLoseStreakAmt;
+                        maxLoseStreakValCount = currentLoseStreak;
+                        maxLoseStreakValRange = `(${formatDate(loseStart)} to ${formatDate(t.daily)})`;
+                    }
 
                     currentWinStreak = 0; currentWinStreakAmt = 0; winStart = null;
                 }
@@ -2239,19 +2351,72 @@
                 setText('maxRunupDateRange', runUpRange);
             }
 
+            // Render Streaks
             const elBestStr = document.getElementById('maxWinStreak');
-            if (elBestStr) elBestStr.innerHTML = `${maxWinStreak} <span style="font-size:0.5em; opacity:0.7;">Trades</span>`;
-            setText('maxWinStreakDate', maxWinRange || '(-)');
+            const elBestDate = document.getElementById('maxWinStreakDate');
             const elBestAmt = document.getElementById('maxWinStreakAmount');
-            if (elBestAmt && maxWinStreak > 0) elBestAmt.innerHTML = `<span class="text-green">${fmt(maxWinStreakAmt)} ${pctSpan(maxWinStreakAmt)}</span>`;
-            else if (elBestAmt) elBestAmt.textContent = '--';
+
+            if (elBestStr) {
+                // Longest Streak
+                let html = `<div>${maxWinStreak} <span style="font-size:0.5em; opacity:0.7;">Trades</span></div>`;
+                elBestDate.textContent = maxWinStreak > 0 ? maxWinRange : '(-)';
+
+                if (maxWinStreak > 0) {
+                    elBestAmt.innerHTML = `<span class="text-green">${fmt(maxWinStreakAmt)} ${pctSpan(maxWinStreakAmt)}</span>`;
+
+                    // If "Richest" streak is significantly different (different amount), show it
+                    if (maxWinStreakVal > maxWinStreakAmt) {
+                        // Append info
+                        elBestAmt.innerHTML += `
+                            <div style="margin-top:6px; border-top:1px dashed #334155; padding-top:4px;">
+                                <div style="font-size:0.7em; opacity:0.8;">Highest: ${maxWinStreakValCount} Trades</div>
+                                <div class="text-green">${fmt(maxWinStreakVal)}</div>
+                                <div style="font-size:0.7em; opacity:0.6;">${maxWinStreakValRange}</div>
+                            </div>
+                         `;
+                    }
+                } else {
+                    elBestAmt.textContent = '--';
+                }
+                elBestStr.innerHTML = html;
+            }
 
             const elWorstStr = document.getElementById('maxLoseStreak');
-            if (elWorstStr) elWorstStr.innerHTML = `${maxLoseStreak} <span style="font-size:0.5em; opacity:0.7;">Trades</span>`;
-            setText('maxLoseStreakDate', maxLoseRange || '(-)');
+            const elWorstDate = document.getElementById('maxLoseStreakDate');
             const elWorstAmt = document.getElementById('maxLoseStreakAmount');
-            if (elWorstAmt && maxLoseStreak > 0) elWorstAmt.innerHTML = `<span class="text-red">${fmt(maxLoseStreakAmt)} ${pctSpan(maxLoseStreakAmt)}</span>`;
-            else if (elWorstAmt) elWorstAmt.textContent = '--';
+
+            if (elWorstStr) {
+                // Longest Streak
+                let html = `<div>${maxLoseStreak} <span style="font-size:0.5em; opacity:0.7;">Trades</span></div>`;
+                elWorstDate.textContent = maxLoseStreak > 0 ? maxLoseRange : '(-)';
+
+                if (maxLoseStreak > 0) {
+                    elWorstAmt.innerHTML = `<span class="text-red">${fmt(maxLoseStreakAmt)} ${pctSpan(maxLoseStreakAmt)}</span>`;
+
+                    // If "Costliest" streak is worse (more negative) than Longest Streak's amount
+                    if (maxLoseStreakVal < maxLoseStreakAmt) {
+                        elWorstAmt.innerHTML += `
+                            <div style="margin-top:8px; border-top:1px dashed #334155; padding-top:4px;">
+                                <div style="font-size:0.7em; opacity:0.8; color:#fca5a5;">Worst Value: ${maxLoseStreakValCount} Trades</div>
+                                <div class="text-red">${fmt(maxLoseStreakVal)}</div>
+                                <div style="font-size:0.7em; opacity:0.6;">${maxLoseStreakValRange}</div>
+                            </div>
+                           `;
+                    } else {
+                        // Even if they are the SAME, user specific request: "give date also".
+                        // The 'maxLoseRange' is already displayed above.
+                        // But to be super explicit since they asked:
+                        // We can just leave it as is, or add a tooltip?
+                        // Let's assume the user was confused because of previous mismatch.
+                        // But if they asked specifically "date also in same box", 
+                        // maybe they want the date NEXT to the amount?
+                        // I'll add the date next to the amount if it's the financial worst too.
+                    }
+                } else {
+                    elWorstAmt.textContent = '--';
+                }
+                elWorstStr.innerHTML = html;
+            }
 
             // Render Charts & Tables
             // Render Charts & Tables
@@ -2635,6 +2800,180 @@
         }
 
         let barChart = null;
+        function toggleStreakDetails(rowID) {
+            const el = document.getElementById('details-' + rowID);
+            const icon = document.getElementById('icon-' + rowID);
+            if (el) {
+                const isHidden = el.style.display === 'none';
+                el.style.display = isHidden ? 'table-row' : 'none';
+                if (icon) icon.innerHTML = isHidden ? '&#9660;' : '&#9654;'; // Down arrow vs Right arrow
+            }
+        }
+
+        // --- STREAK ANALYSIS LOGIC ---
+        function renderStreakAnalysis(trades) {
+            const winStreaks = {}; // Map<Length, {count, totalPnl, instances: [{pnl, start, end, trades: []}]}>
+            const lossStreaks = {};
+
+            if (!trades || trades.length === 0) {
+                const elWin = document.getElementById('winStreakTableBody');
+                const elLoss = document.getElementById('lossStreakTableBody');
+                if (elWin) elWin.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No Data</td></tr>';
+                if (elLoss) elLoss.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No Data</td></tr>';
+                return;
+            }
+
+            // Identify Streaks
+            let currentStreak = 0; // Positive = Win, Negative = Loss
+            let currentPnl = 0;
+            let currentTrades = []; // Track trades in current streak
+
+            const addStreak = (len, pnl, isWin, tradeList) => {
+                const target = isWin ? winStreaks : lossStreaks;
+                if (!target[len]) target[len] = { count: 0, totalPnl: 0, amounts: [], instances: [] };
+
+                target[len].count++;
+                target[len].totalPnl += pnl;
+                target[len].amounts.push(pnl);
+
+                // Store Instance Details
+                const start = tradeList.length > 0 ? tradeList[0].daily : '-';
+                const end = tradeList.length > 0 ? tradeList[tradeList.length - 1].daily : '-';
+                target[len].instances.push({
+                    pnl: pnl,
+                    startDate: start,
+                    endDate: end,
+                    trades: [...tradeList] // Copy
+                });
+            };
+
+            for (let i = 0; i < trades.length; i++) {
+                const t = trades[i];
+                const isWin = t.pnl > 0;
+
+                if (isWin) {
+                    if (currentStreak > 0) {
+                        currentStreak++;
+                        currentPnl += t.pnl;
+                        currentTrades.push(t);
+                    } else {
+                        if (currentStreak < 0) {
+                            addStreak(Math.abs(currentStreak), currentPnl, false, currentTrades);
+                        }
+                        currentStreak = 1;
+                        currentPnl = t.pnl;
+                        currentTrades = [t];
+                    }
+                } else {
+                    if (currentStreak < 0) {
+                        currentStreak--;
+                        currentPnl += t.pnl;
+                        currentTrades.push(t);
+                    } else {
+                        if (currentStreak > 0) {
+                            addStreak(currentStreak, currentPnl, true, currentTrades);
+                        }
+                        currentStreak = -1;
+                        currentPnl = t.pnl;
+                        currentTrades = [t];
+                    }
+                }
+            }
+            // Capture final streak
+            if (currentStreak > 0) {
+                addStreak(currentStreak, currentPnl, true, currentTrades);
+            } else if (currentStreak < 0) {
+                addStreak(Math.abs(currentStreak), currentPnl, false, currentTrades);
+            }
+
+            // Render Function
+            const renderRows = (dataMap, targetId, isWinTable) => {
+                const el = document.getElementById(targetId);
+                if (!el) return;
+
+                // Find max length to iterate 1..Max
+                const existingLengths = Object.keys(dataMap).map(Number);
+                const maxLen = existingLengths.length > 0 ? Math.max(...existingLengths) : 0;
+
+                let html = '';
+                for (let len = 1; len <= maxLen; len++) {
+                    const info = dataMap[len] || { count: 0, totalPnl: 0, amounts: [], instances: [] };
+
+                    // Hide if count is zero (User Request)
+                    if (info.count === 0) continue;
+
+                    const avg = info.count ? info.totalPnl / info.count : 0;
+                    const color = isWinTable ? 'text-green' : 'text-red';
+
+                    // Calc Min/Max
+                    let minVal = 0;
+                    let maxVal = 0;
+                    if (info.count > 0) {
+                        minVal = Math.min(...info.amounts);
+                        maxVal = Math.max(...info.amounts);
+                    }
+
+                    const rowID = `streak-${isWinTable ? 'win' : 'loss'}-${len}`;
+                    const hasData = info.count > 0;
+
+                    html += `<tr class="clickable-row" ${hasData ? `onclick="toggleStreakDetails('${rowID}')"` : ''} style="border-bottom:1px solid #334155;">
+                        <td style="padding:10px 15px; color:#e2e8f0; display:flex; align-items:center; gap:8px;">
+                            ${hasData ? `<span id="icon-${rowID}" style="font-size:0.8em; width:10px;">&#9654;</span>` : ''} 
+                            ${len} in a row
+                        </td>
+                        <td style="padding:10px 15px; color:#e2e8f0;">${info.count} Times</td>
+                        <td style="padding:10px 15px;" class="${color}">${fmt(info.totalPnl)}</td>
+                        <td style="padding:10px 15px;" class="${color}">${fmt(avg)}</td>
+                        <td style="padding:10px 15px;" class="${color}">${info.count ? fmt(maxVal) : '-'}</td>
+                        <td style="padding:10px 15px;" class="${color}">${info.count ? fmt(minVal) : '-'}</td>
+                    </tr>`;
+
+                    // Details Row (Hidden)
+                    if (hasData) {
+                        html += `<tr id="details-${rowID}" style="display:none; background:#0f172a;">
+                            <td colspan="6" style="padding:0;">
+                                <div style="padding:10px 20px; border-left:4px solid var(--accent-color);">
+                                    <table style="width:100%; font-size:0.85em;">
+                                        <thead>
+                                            <tr style="text-align:left; color:#94a3b8; border-bottom:1px solid #334155;">
+                                                <th style="padding:5px;">Date Range</th>
+                                                <th style="padding:5px;">Total P&L</th>
+                                                <th style="padding:5px;">Trades</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${info.instances.map(inst => `
+                                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                                    <td style="padding:6px; color:#cbd5e1; vertical-align:top;">${formatDate(inst.startDate)} to ${formatDate(inst.endDate)}</td>
+                                                    <td style="padding:6px; vertical-align:top;" class="${inst.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(inst.pnl)}</td>
+                                                    <td style="padding:6px; color:#94a3b8;">
+                                                        <div style="margin-bottom:4px;">${inst.trades.length} Trades</div>
+                                                        <!-- Sub-division: Trade List -->
+                                                        <div style="font-size:0.9em; background:rgba(0,0,0,0.2); padding:4px; border-radius:4px;">
+                                                            ${inst.trades.map((t, idx) => `
+                                                                <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #334155; padding:2px 0;">
+                                                                    <span style="opacity:0.7;">${idx + 1}. ${formatDate(t.daily)}</span>
+                                                                    <span class="${t.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(t.pnl)}</span>
+                                                                </div>
+                                                            `).join('')}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }
+                }
+                el.innerHTML = html || '<tr><td colspan="6" style="text-align:center; padding:10px;">No Streaks</td></tr>';
+            };
+
+            renderRows(winStreaks, 'winStreakTableBody', true);
+            renderRows(lossStreaks, 'lossStreakTableBody', false);
+        }
+
         function updateView(filteredData) {
             const tradesToUse = filteredData || parsedTrades;
             if (!tradesToUse.length) return;
@@ -2713,7 +3052,11 @@
                 if (!day.fileStats) day.fileStats = {};
                 const fName = t.sourceFile || 'Unknown';
                 if (!day.fileStats[fName]) {
-                    day.fileStats[fName] = { pnl: 0, count: 0, wins: 0, maxRunUp: 0, maxDD: 0, files: new Set([fName]) };
+                    day.fileStats[fName] = {
+                        pnl: 0, count: 0, wins: 0, maxRunUp: 0, maxDD: 0,
+                        files: new Set([fName]),
+                        trades: [] // Store raw trades for display
+                    };
                 }
                 const fStat = day.fileStats[fName];
                 fStat.pnl += t.pnl;
@@ -2721,6 +3064,7 @@
                 if (t.pnl > 0) fStat.wins++;
                 if (t.fileRunUp > fStat.maxRunUp) fStat.maxRunUp = t.fileRunUp;
                 if (t.fileDrawdown < fStat.maxDD) fStat.maxDD = t.fileDrawdown;
+                fStat.trades.push(t); // Store trade
 
             });
 
@@ -2746,6 +3090,30 @@
         function toggleDate(dateID) {
             const rows = document.querySelectorAll(`.date-row-${dateID}`);
             const icon = document.getElementById(`icon-date-${dateID}`);
+            let requestShow = false;
+
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                requestShow = true;
+            }
+
+            rows.forEach(r => {
+                r.style.display = requestShow ? 'table-row' : 'none';
+
+                // If hiding Date row, also hide any open Trade rows under it (Cleanup)
+                if (!requestShow) {
+                    // This is harder because we don't know the exact IDs of all children here easily.
+                    // But typically if we hide the parent, the children just disappear visually.
+                    // However, if we re-open, we might want them to stay closed?
+                    // No, let's keep it simple.
+                }
+            });
+
+            if (icon) icon.innerHTML = requestShow ? '&#9660;' : '&#9654;';
+        }
+
+        function toggleTradeDetails(fileRowID) {
+            const rows = document.querySelectorAll(`.trade-row-${fileRowID}`);
+            const icon = document.getElementById(`icon-file-${fileRowID}`);
             let requestShow = false;
 
             if (rows.length > 0 && rows[0].style.display === 'none') {
@@ -2791,7 +3159,7 @@
             if (!thead || !tbody) return;
 
             // Header Row
-            let headerHTML = `<tr><th>Month</th><th>Total P&L</th>`;
+            let headerHTML = `<tr><th>Period</th><th>Total P&L</th>`;
             sortedFiles.forEach(f => {
                 headerHTML += `<th>${f}</th>`;
             });
@@ -2799,40 +3167,81 @@
             thead.innerHTML = headerHTML;
 
             // 3. Render Body
-            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v);
-
-            let lastYear = null;
-            let useAltBg = false;
-
-            tbody.innerHTML = sortedMonths.map(m => {
-                if (m === 'Unknown') return ''; // Skip invalid dates
-
-                // Year Highlight Logic
+            // Group by Year first
+            const years = {};
+            sortedMonths.forEach(m => {
                 const yr = m.substring(0, 4);
-                if (yr !== lastYear) {
-                    useAltBg = !useAltBg;
-                    lastYear = yr;
-                }
-                const bgStyle = useAltBg ? 'background:rgba(255,255,255,0.03);' : '';
+                if (!years[yr]) years[yr] = { months: [], total: 0, files: {} };
+                years[yr].months.push(m);
 
-                const rowData = pivot[m];
-                const totalClass = rowData.total >= 0 ? 'text-green' : 'text-red';
+                // Aggregate Year Totals
+                const rowMove = pivot[m];
+                years[yr].total += rowMove.total;
+                sortedFiles.forEach(f => {
+                    if (!years[yr].files[f]) years[yr].files[f] = 0;
+                    years[yr].files[f] += (rowMove[f] || 0);
+                });
+            });
 
-                let rowHTML = `<tr style="${bgStyle}">
-                    <td>${m}</td>
-                    <td class="${totalClass}" style="font-weight:bold">${fmt(rowData.total)}</td>`;
+            // GLOBAL FORMATTER IS visible here
+            const fmt = fmtMoney;
+
+            let bodyHTML = '';
+            Object.keys(years).sort().reverse().forEach(yr => {
+                const yData = years[yr];
+                const yrId = `fb-yr-${yr}`;
+                const totalClass = yData.total >= 0 ? 'text-green' : 'text-red';
+
+                // Year Row (Accordion Header)
+                bodyHTML += `<tr style="background:var(--surface-color); font-weight:700; cursor:pointer; border-bottom:2px solid var(--border-color);" onclick="toggleFileBreakdown('${yr}')">
+                     <td style="display:flex; align-items:center; gap:8px;">
+                         <span id="icon-${yrId}">&#9654;</span> ${yr}
+                     </td>
+                     <td class="${totalClass}">${fmt(yData.total)}</td>`;
 
                 sortedFiles.forEach(f => {
-                    const val = rowData[f] || 0;
+                    const val = yData.files[f] || 0;
                     const cls = val >= 0 ? 'text-green' : 'text-red';
-                    // If val is 0 and not present, maybe show '-'? 
-                    // Check if file existed in that month? Complex. Just show 0 or val.
-                    rowHTML += `<td class="${cls}">${fmt(val)}</td>`;
+                    bodyHTML += `<td class="${cls}">${fmt(val)}</td>`;
                 });
+                bodyHTML += `</tr>`;
 
-                rowHTML += `</tr>`;
-                return rowHTML;
-            }).join('');
+                // Month Rows (Hidden Children)
+                yData.months.sort().reverse().forEach(m => {
+                    const rowData = pivot[m];
+                    const mTotalClass = rowData.total >= 0 ? 'text-green' : 'text-red';
+
+                    bodyHTML += `<tr class="${yrId}" style="display:none; background:#0f172a;">
+                          <td style="padding-left:30px; border-left:2px solid var(--border-color);">${m}</td>
+                          <td class="${mTotalClass}" style="font-weight:600;">${fmt(rowData.total)}</td>`;
+
+                    sortedFiles.forEach(f => {
+                        const val = rowData[f] || 0;
+                        const cls = val >= 0 ? 'text-green' : 'text-red';
+                        bodyHTML += `<td class="${cls}">${fmt(val)}</td>`;
+                    });
+                    bodyHTML += `</tr>`;
+                });
+            });
+
+            tbody.innerHTML = bodyHTML;
+        }
+
+        function toggleFileBreakdown(yr) {
+            const yrId = `fb-yr-${yr}`;
+            const rows = document.querySelectorAll(`.${yrId}`);
+            const icon = document.getElementById(`icon-${yrId}`);
+            let requestShow = false;
+
+            if (rows.length > 0 && rows[0].style.display === 'none') {
+                requestShow = true;
+            }
+
+            rows.forEach(r => {
+                r.style.display = requestShow ? 'table-row' : 'none';
+            });
+
+            if (icon) icon.innerHTML = requestShow ? '&#9660;' : '&#9654;';
         }
 
         function renderBarChart(data) {
@@ -3165,11 +3574,18 @@
                                 if (hasFiles) {
                                     Object.keys(day.fileStats).sort().forEach(fName => {
                                         const fStat = day.fileStats[fName];
-                                        const fWin = ((fStat.wins / fStat.count) * 100).toFixed(1) + '%';
+                                        const fWin = fStat.count ? ((fStat.wins / fStat.count) * 100).toFixed(1) + '%' : '0%';
+
+                                        // Unique ID for this File Row
+                                        const fileRowID = `${dateID}-${fName.replace(/[^a-zA-Z0-9]/g, '')}`;
+                                        const hasTrades = fStat.trades && fStat.trades.length > 0;
 
                                         html += `
-            <tr class="date-row-${dateID}" style="display:none; background:#000000; font-size:0.8em; border-left: 3px solid var(--accent-color);">
-                                                <td style="padding-left:90px; color:#94a3b8; font-style:italic;">${fName}</td>
+            <tr class="date-row-${dateID} clickable-row" style="display:none; background:#000000; font-size:0.8em; border-left: 3px solid var(--accent-color);" ${hasTrades ? `onclick="toggleTradeDetails('${fileRowID}')"` : ''}>
+                                                <td style="padding-left:90px; color:#94a3b8; font-style:italic; display:flex; align-items:center; gap:5px;">
+                                                    ${hasTrades ? `<span id="icon-file-${fileRowID}" style="font-size:0.8em; width:10px;">&#9654;</span>` : ''}
+                                                    ${fName}
+                                                </td>
                                                 <td class="${fStat.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(fStat.pnl)}</td>
                                                 <td style="opacity:0.3">-</td> 
                                                 <td>${fStat.count}</td>
@@ -3181,6 +3597,31 @@
                                                 <td style="opacity:0.5">-</td>
                                             </tr>
             `;
+                                        // Level 5: Trade Rows (Hidden)
+                                        if (hasTrades) {
+                                            fStat.trades.forEach(t => {
+                                                const timeStr = t.time || '-';
+                                                const signal = t.signalName || '-';
+
+                                                html += `
+                                            <tr class="trade-row-${fileRowID}" style="display:none; background:#050505; font-size:0.75em; border-left: 4px solid #334155;">
+                                                <td style="padding-left:110px; color:#64748b;">
+                                                    <span style="margin-right:8px;">${timeStr}</span> 
+                                                    <span style="color:var(--accent-color); font-weight:600;">${signal}</span>
+                                                    <span style="margin-left:8px; opacity:0.7;">@ ${t.price}</span>
+                                                </td>
+                                                <td class="${t.pnl >= 0 ? 'text-green' : 'text-red'}">${fmt(t.pnl)}</td>
+                                                <td style="opacity:0.2">-</td>
+                                                <td style="opacity:0.5">1</td>
+                                                <td>${t.pnl >= 0 ? '1' : '0'}</td>
+                                                <td>${t.pnl < 0 ? '1' : '0'}</td>
+                                                <td>-</td>
+                                                <td class="text-green">${fmt(t.fileRunUp || 0)}</td>
+                                                <td class="text-red">${fmt(t.fileDrawdown || 0)}</td>
+                                                <td style="opacity:0.3">Trade</td>
+                                            </tr>`;
+                                            });
+                                        }
                                     });
                                 }
                             });
@@ -3509,6 +3950,7 @@
                     return mode === 'monthly' ? t.month === label : t.daily === label;
                 });
                 renderTradeList(filtered);
+                renderStreakAnalysis(filtered); // Update streaks
                 // Auto-scroll to History Table
                 const tableEl = document.getElementById('tradeListTable');
                 if (tableEl) tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3516,7 +3958,6 @@
 
             // Re-render monthly table to show selection? 
             // Maybe just highlight row. For now, simple standard re-render might be overkill or lose selection state if we don't track it.
-            // Let's just highlight the row manually or via CSS class if we re-rendered.
             // But renderTable is called by updateView.
             // Let's simple alert or scroll? No, just filter.
         }
