@@ -518,7 +518,7 @@
         <nav class="tab-nav">
             <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
             <button class="tab-btn" onclick="switchTab('charts')">Analysis</button>
-            <button class="tab-btn" onclick="switchTab('time-analysis')">Time Analysis</button>
+            <!-- <button class="tab-btn" onclick="switchTab('time-analysis')">Time Analysis</button> -->
             <button class="tab-btn" onclick="switchTab('streaks')">Streak Analysis</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
         </nav>
@@ -527,7 +527,7 @@
         <div id="tab-dashboard" class="tab-content active">
             <div class="stats-dashboard">
                 <!-- Card 1: Performance -->
-                <div class="stats-card">
+                <div class="stats-card" onclick="goToHistory('daily')" style="cursor: pointer;">
                     <div class="stats-card-title">Performance</div>
                     <div class="stats-card-value" id="winRateDisplay">--%</div>
                     <div class="stats-card-sub">
@@ -554,7 +554,7 @@
                 </div>
 
                 <!-- Card: Yearly Overview (New) -->
-                <div class="stats-card">
+                <div class="stats-card" onclick="goToHistory('monthly')" style="cursor: pointer;">
                     <div class="stats-card-title">Yearly Overview</div>
                     <div class="stats-card-value" style="font-size:1.1em; display:flex; flex-direction:column; gap:4px;"
                         id="yearlyStatsList">
@@ -853,6 +853,7 @@
                                 <tr style="background:#0f172a; color:#94a3b8; font-size:0.85em; text-align:left;">
                                     <th style="padding:10px 15px;">Streak Length</th>
                                     <th style="padding:10px 15px;">Count (Frequency)</th>
+                                    <th style="padding:10px 15px;">Probability</th>
                                     <th style="padding:10px 15px;">Total Amount</th>
                                     <th style="padding:10px 15px;">Avg Amount</th>
                                     <th style="padding:10px 15px;">Max Profit</th>
@@ -876,6 +877,7 @@
                                 <tr style="background:#0f172a; color:#94a3b8; font-size:0.85em; text-align:left;">
                                     <th style="padding:10px 15px;">Streak Length</th>
                                     <th style="padding:10px 15px;">Count (Frequency)</th>
+                                    <th style="padding:10px 15px;">Probability</th>
                                     <th style="padding:10px 15px;">Total Amount</th>
                                     <th style="padding:10px 15px;">Avg Amount</th>
                                     <th style="padding:10px 15px;">Smallest Loss</th>
@@ -895,23 +897,26 @@
 
             <div class="glass-panel">
                 <div class="section-title">Monthly Breakdown</div>
-                <table id="monthlyTable">
-                    <thead>
-                        <tr>
-                            <th id="periodHeader">Month</th>
-                            <th>Net P&L</th>
-                            <th>Cumulative P&L</th>
-                            <th>Count</th>
-                            <th>Wins</th>
-                            <th>Losses</th>
-                            <th>Win%</th>
-                            <th>Run-up</th>
-                            <th>Drawdown</th>
-                            <th>File</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+                <!-- Monthly Stats Table -->
+                <div id="panel-history-monthly" style="overflow-x: auto; margin-bottom: 25px;">
+                    <table id="monthlyTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th id="periodHeader">Month</th>
+                                <th>Net P&L</th>
+                                <th>Cumulative P&L</th>
+                                <th>Count</th>
+                                <th>Wins</th>
+                                <th>Losses</th>
+                                <th>Win%</th>
+                                <th>Run-up</th>
+                                <th>Drawdown</th>
+                                <th>File</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="glass-panel">
@@ -946,7 +951,7 @@
 
 
 
-            <div class="glass-panel">
+            <div id="panel-history-daily" class="glass-panel">
                 <div class="section-title">Trade History</div>
                 <div style="overflow-x: auto;">
                     <table id="tradeListTable" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -1021,10 +1026,66 @@
             }, 100);
         }
 
+        function goToHistory(section) {
+            switchTab('history');
+            setTimeout(() => {
+                const id = section === 'monthly' ? 'panel-history-monthly' : 'panel-history-daily';
+                const el = document.getElementById(id);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Flash effect
+                    el.style.transition = 'box-shadow 0.3s ease';
+                    el.style.boxShadow = '0 0 0 2px var(--accent-color)';
+                    setTimeout(() => el.style.boxShadow = 'none', 1000);
+                }
+            }, 100);
+        }
+
+        function applyHistoryFilter(start, end) {
+            // Robust parsing for "YYYY-MM-DD"
+            const parseYMD = (s) => {
+                if (!s) return null;
+                const parts = s.split('-');
+                if (parts.length === 3) return new Date(parts[0], parts[1] - 1, parts[2]); // Local Time
+                return new Date(s);
+            };
+
+            const startDate = parseYMD(start);
+            const endDate = parseYMD(end);
+            if (endDate) endDate.setHours(23, 59, 59, 999);
+
+            const subset = parsedTrades.filter(t => {
+                if (hiddenFiles.has(t.sourceFile)) return false;
+                if (!t.timestamp) return false;
+                // t.timestamp is derived from Local Date construction in parseDate
+                const d = new Date(t.timestamp);
+                return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+            });
+
+            // Ensure chronological order for correct Drawdown Calculation
+            subset.sort((a, b) => a.timestamp - b.timestamp);
+
+            // Prepare Full Data (respecting hidden files) for "Back Mode" context
+            const fullData = parsedTrades.filter(t => !hiddenFiles.has(t.sourceFile));
+            // Sort full data too just in case
+            fullData.sort((a, b) => a.timestamp - b.timestamp);
+
+            // Update History Analysis (Monthly, Charts) -> FULL DATA
+            updateView(fullData);
+            renderEquityCurve(fullData);
+
+            // Update Trade List -> FILTERED SUBSET ONLY
+            renderTradeList(subset);
+
+            // Navigate
+            goToHistory('daily');
+        }
+
         // --- Core Logic ---
         let parsedTrades = [];
         let savedMultipliers = {};
         let savedCapitals = {};
+        let savedSlippage = {}; // New: Store Slippage per file
         let hiddenFiles = new Set();
         let latestFileMeta = null; // Global to store debug info
         // No global multiplier variable needed, read from DOM dynamically
@@ -1036,7 +1097,7 @@
         // Function to update multiplier and re-render
         function updateMultipliers() {
             // Update Global State from DOM
-            const multInputs = document.querySelectorAll('#fileControlsList input.chip-input');
+            const multInputs = document.querySelectorAll('#fileControlsList input.chip-input:not(.cap-input):not(.slip-input)'); // Exclude cap/slip
             multInputs.forEach(inp => {
                 const val = parseFloat(inp.value);
                 savedMultipliers[inp.getAttribute('data-filename')] = isNaN(val) ? 1 : val;
@@ -1048,12 +1109,25 @@
                 savedCapitals[inp.getAttribute('data-filename')] = isNaN(val) ? 35000 : val;
             });
 
+            const slipInputs = document.querySelectorAll('#fileControlsList input.slip-input');
+            slipInputs.forEach(inp => {
+                const val = parseFloat(inp.value);
+                savedSlippage[inp.getAttribute('data-filename')] = isNaN(val) ? 0 : val;
+            });
+
             if (parsedTrades.length > 0) {
                 // Re-calculate live values from originals
                 parsedTrades.forEach(t => {
                     const factor = savedMultipliers[t.sourceFile] !== undefined ? savedMultipliers[t.sourceFile] : 1;
+                    const slipPct = savedSlippage[t.sourceFile] !== undefined ? savedSlippage[t.sourceFile] : 0;
+                    const capital = savedCapitals[t.sourceFile] !== undefined ? savedCapitals[t.sourceFile] : 35000;
 
-                    if (t.originalPnl !== undefined) t.pnl = t.originalPnl * factor;
+                    if (t.originalPnl !== undefined) {
+                        // Apply Multiplier AND Slippage
+                        // Slippage is % of Traded Capital
+                        const totalSlip = (capital * factor) * (slipPct / 100);
+                        t.pnl = (t.originalPnl * factor) - totalSlip;
+                    }
                     if (t.originalFileRunUp !== undefined) t.fileRunUp = t.originalFileRunUp * factor;
                     if (t.originalFileDrawdown !== undefined) t.fileDrawdown = t.originalFileDrawdown * factor;
                 });
@@ -1104,14 +1178,18 @@
             if (hiddenFiles.has(name)) hiddenFiles.delete(name);
             else hiddenFiles.add(name);
 
-            // Scrape current multipliers to preserve them
-            const inputs = document.querySelectorAll('#fileControlsList input');
+            // Scrape current state
             const mults = {};
-            inputs.forEach(inp => mults[inp.getAttribute('data-filename')] = inp.value);
+            const caps = {};
+            const slips = {};
+
+            document.querySelectorAll('#fileControlsList input.chip-input:not(.cap-input):not(.slip-input)').forEach(inp => mults[inp.getAttribute('data-filename')] = inp.value);
+            document.querySelectorAll('#fileControlsList input.cap-input').forEach(inp => caps[inp.getAttribute('data-filename')] = inp.value);
+            document.querySelectorAll('#fileControlsList input.slip-input').forEach(inp => slips[inp.getAttribute('data-filename')] = inp.value);
 
             // Re-render controls
             const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
-            renderFileControls(uniqueFiles, mults);
+            renderFileControls(uniqueFiles, mults, caps, slips);
 
             // Update Report
             updateMultipliers();
@@ -1125,16 +1203,26 @@
             hiddenFiles.delete(name);
 
             // Scrape multipliers (excluding deleted)
-            const inputs = document.querySelectorAll('#fileControlsList input');
             const mults = {};
-            inputs.forEach(inp => {
+            const caps = {};
+            const slips = {};
+
+            document.querySelectorAll('#fileControlsList input.chip-input:not(.cap-input):not(.slip-input)').forEach(inp => {
                 const fname = inp.getAttribute('data-filename');
                 if (fname !== name) mults[fname] = inp.value;
+            });
+            document.querySelectorAll('#fileControlsList input.cap-input').forEach(inp => {
+                const fname = inp.getAttribute('data-filename');
+                if (fname !== name) caps[fname] = inp.value;
+            });
+            document.querySelectorAll('#fileControlsList input.slip-input').forEach(inp => {
+                const fname = inp.getAttribute('data-filename');
+                if (fname !== name) slips[fname] = inp.value;
             });
 
             // Re-render
             const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
-            renderFileControls(uniqueFiles, mults);
+            renderFileControls(uniqueFiles, mults, caps, slips);
 
             if (uniqueFiles.length === 0) {
                 // Clear report
@@ -1170,6 +1258,34 @@
             // if (val < 0) val = 0; // Optional constrain
             inp.value = val;
             updateMultipliers();
+        }
+
+        // New Helper for Slippage
+        function adjustSlip(name, delta, btn) {
+            const container = btn.closest('.chip-input-group');
+            const inp = container.querySelector('input');
+            let val = parseFloat(inp.value);
+            if (isNaN(val)) val = 0;
+            val = Math.round((val + delta) * 100) / 100; // Round to 2 decimals
+            if (val < 0) val = 0;
+            inp.value = val;
+            updateMultipliers();
+        }
+
+        function handleSlipWheel(evt, inp) {
+            evt.preventDefault();
+            const delta = evt.deltaY < 0 ? 0.05 : -0.05; // Scroll step 0.05
+            let val = parseFloat(inp.value);
+            if (isNaN(val)) val = 0;
+            val = Math.round((val + delta) * 100) / 100;
+            if (val < 0) val = 0;
+            inp.value = val;
+            updateMultipliers();
+        }
+
+        function handleSlipGroupWheel(evt, group) {
+            const inp = group.querySelector('input');
+            if (inp) handleSlipWheel(evt, inp);
         }
 
         function handleFileSelect(evt, isMerge = false) {
@@ -1222,12 +1338,17 @@
                 // Collect existing multipliers and capitals if merge
                 let currentMults = {};
                 let currentCaps = {};
+                let currentSlips = {};
+
                 if (isMerge) {
-                    document.querySelectorAll('#fileControlsList input.chip-input').forEach(inp => {
+                    document.querySelectorAll('#fileControlsList input.chip-input:not(.cap-input):not(.slip-input)').forEach(inp => {
                         currentMults[inp.getAttribute('data-filename')] = inp.value;
                     });
                     document.querySelectorAll('#fileControlsList input.cap-input').forEach(inp => {
                         currentCaps[inp.getAttribute('data-filename')] = inp.value;
+                    });
+                    document.querySelectorAll('#fileControlsList input.slip-input').forEach(inp => {
+                        currentSlips[inp.getAttribute('data-filename')] = inp.value;
                     });
                 }
 
@@ -1235,7 +1356,7 @@
                 const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
 
                 // Render controls (preserve mults if merge)
-                renderFileControls(uniqueFiles, currentMults, currentCaps);
+                renderFileControls(uniqueFiles, currentMults, currentCaps, currentSlips);
 
                 // Initial update
                 updateMultipliers();
@@ -1249,7 +1370,7 @@
             });
         }
 
-        function renderFileControls(files, savedMultipliers = {}, savedCapitals = {}) {
+        function renderFileControls(files, savedMultipliers = {}, savedCapitals = {}, savedSlippage = {}) {
             const container = document.getElementById('fileControlsList');
             const panel = document.getElementById('activeFilesPanel');
 
@@ -1267,6 +1388,7 @@
             names.sort().forEach(name => {
                 const initialVal = savedMultipliers[name] !== undefined ? savedMultipliers[name] : 1;
                 const initialCap = savedCapitals[name] !== undefined ? savedCapitals[name] : 35000;
+                const initialSlip = savedSlippage[name] !== undefined ? savedSlippage[name] : 0;
                 const isHidden = hiddenFiles.has(name);
 
                 const div = document.createElement('div');
@@ -1291,32 +1413,40 @@
                         </button>
                     </div>
 
-                    <div class="chip-input-group" style="margin-right:4px;">
-                        <span style="font-size:0.75em; color:var(--text-secondary); opacity:0.7; margin-right:2px;">₹</span>
-                        <input type="number" step="1000" data-filename="${name}" value="${initialCap}" 
-                            oninput="updateMultipliers()" 
-                            class="chip-input cap-input" style="width: 65px;">
+                    <!-- Capital Input -->
+                    <div class="chip-input-group" title="Initial Capital">
+                        <span style="color:#64748b; font-size:0.8em; margin-right:2px;">₹</span>
+                        <input type="number" class="chip-input cap-input" data-filename="${name}" value="${initialCap}" min="0" step="1000" onchange="updateMultipliers()">
                     </div>
 
-                    <div class="chip-input-group" onwheel="handleGroupWheel(event, this)">
-                        <span style="font-size:0.75em; color:var(--text-secondary); opacity:0.7;">x</span>
-                        <input type="number" step="0.1" data-filename="${name}" value="${initialVal}" 
-                            oninput="updateMultipliers()" 
-                            onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown') setTimeout(updateMultipliers, 0)"
-                            class="chip-input">
+                    <!-- Slippage Input (NEW) -->
+                    <div class="chip-input-group" title="Slippage % of Capital" onwheel="handleSlipGroupWheel(event, this)">
+                        <span style="color:#ef4444; font-size:0.8em; margin-right:2px;">%</span>
+                        <input type="number" class="chip-input slip-input" data-filename="${name}" value="${initialSlip}" min="0" step="0.05" onchange="updateMultipliers()">
                         <div class="spinner-btns">
-                            <button class="spin-btn up" onclick="adjustMult('${name}', 0.1, this)">&#9650;</button>
-                            <button class="spin-btn down" onclick="adjustMult('${name}', -0.1, this)">&#9660;</button>
+                            <button class="spin-btn up" onclick="adjustSlip('${name}', 0.05, this)">▲</button>
+                            <button class="spin-btn down" onclick="adjustSlip('${name}', -0.05, this)">▼</button>
+                        </div>
+                    </div>
+
+                    <!-- Multiplier Input -->
+                    <div class="chip-input-group" onwheel="handleGroupWheel(event, this)">
+                        <span style="color:#64748b; font-size:0.8em; margin-right:2px;">x</span>
+                        <input type="number" class="chip-input" data-filename="${name}" value="${initialVal}" min="0" step="0.1" onchange="updateMultipliers()">
+                        <div class="spinner-btns">
+                            <button class="spin-btn up" onclick="adjustMult('${name}', 0.1, this)">▲</button>
+                            <button class="spin-btn down" onclick="adjustMult('${name}', -0.1, this)">▼</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
             });
 
-            // Add Merge Button
+            // Add Merge Button logic... (restored in next steps if needed, or included here)
             const addBtn = document.createElement('div');
-            addBtn.className = 'file-chip';
-            addBtn.style.cssText = 'background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.3); cursor: pointer; justify-content: center; padding: 6px 10px; width: auto;';
+            addBtn.className = 'file-chip add-btn';
+            addBtn.style.justifyContent = 'center';
+            addBtn.style.cursor = 'pointer';
             addBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -1883,7 +2013,7 @@
             activeFiles.forEach(file => {
                 const cap = (savedCapitals[file] !== undefined) ? parseFloat(savedCapitals[file]) : 35000;
                 const mult = (savedMultipliers[file] !== undefined) ? parseFloat(savedMultipliers[file]) : 1;
-                totalCapital += (cap * mult);
+                totalCapital += Math.max(cap, cap * mult);
             });
             const fmtPct = (val) => totalCapital > 0 ? ((val / totalCapital) * 100).toFixed(1) + '%' : '0%';
             // Helper for inline percentage span - SHARP & BRIGHT (No opacity, bold)
@@ -2103,7 +2233,7 @@
 
                     const days = Math.floor((t.timestamp - peakTimestamp) / (1000 * 60 * 60 * 24));
                     // Part 1: Drop Block
-                    ddRange = `<div style="background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column;">
+                    ddRange = `<div onclick="applyHistoryFilter('${peakDate}', '${t.daily}')" style="background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column; cursor:pointer;" title="Click to filter this period">
                         <span style="font-size:0.7em; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Drop Period</span>
                         <span style="font-size:1.2em; font-weight:800; color:#f1f5f9;">${days} Days</span>
                         <span style="font-size:0.75em; color:#cbd5e1; margin-top:2px;">${formatDate(peakDate)} to ${formatDate(t.daily)}</span>
@@ -2294,6 +2424,8 @@
             const profitEl = document.getElementById('totalNetProfit');
             if (profitEl) {
                 const pnlFormatted = fmt(totalNetPL);
+                const pnlClass = totalNetPL >= 0 ? 'text-green' : 'text-red';
+                profitEl.className = `stats-card-value ${pnlClass}`; // Dynamic Color
                 profitEl.innerHTML = `
                     ${pnlFormatted}
                     <div style="font-size:0.6em; margin-top:8px; font-weight:700; color:var(--text-secondary);">
@@ -2369,9 +2501,9 @@
                         // Append info
                         elBestAmt.innerHTML += `
                             <div style="margin-top:6px; border-top:1px dashed #334155; padding-top:4px;">
-                                <div style="font-size:0.7em; opacity:0.8;">Highest: ${maxWinStreakValCount} Trades</div>
-                                <div class="text-green">${fmt(maxWinStreakVal)}</div>
-                                <div style="font-size:0.7em; opacity:0.6;">${maxWinStreakValRange}</div>
+                                <div style="font-size:0.7em; font-weight:bold; color:#4ade80;">Highest: ${maxWinStreakValCount} Trades</div>
+                                <div class="text-green" style="font-weight:700;">${fmt(maxWinStreakVal)}</div>
+                                <div style="font-size:0.7em; color:#4ade80; opacity:0.8;">${maxWinStreakValRange}</div>
                             </div>
                          `;
                     }
@@ -2455,18 +2587,22 @@
                 created = lib[name].date;
             }
 
-            // Capture current multipliers
-            const inputs = document.querySelectorAll('#fileControlsList input.chip-input');
+            // Capture current multipliers/caps/slippage
+            const inputs = document.querySelectorAll('#fileControlsList input.chip-input:not(.cap-input):not(.slip-input)');
             const multipliers = {};
+            const capitals = {};
+            const slippage = {};
+
             inputs.forEach(inp => {
                 multipliers[inp.getAttribute('data-filename')] = inp.value;
             });
 
-            // Capture current capitals
-            const capInputs = document.querySelectorAll('#fileControlsList input.cap-input');
-            const capitals = {};
-            capInputs.forEach(inp => {
+            document.querySelectorAll('#fileControlsList input.cap-input').forEach(inp => {
                 capitals[inp.getAttribute('data-filename')] = inp.value;
+            });
+
+            document.querySelectorAll('#fileControlsList input.slip-input').forEach(inp => {
+                slippage[inp.getAttribute('data-filename')] = inp.value;
             });
 
             // Capture Date Filters
@@ -2480,6 +2616,8 @@
                 modified: now,
                 trades: parsedTrades,
                 multipliers: multipliers,
+                capitals: capitals,       // Save Capitals
+                slippage: slippage,       // Save Slippage
                 filters: filters
             };
 
@@ -2540,15 +2678,17 @@
                 // Extract unique files to render controls (and show Date Filter/Multipliers)
                 const uniqueFiles = [...new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean))];
                 const savedMultipliers = lib[name].multipliers || {};
-                renderFileControls(uniqueFiles, savedMultipliers);
+                const savedCapitals = lib[name].capitals || {};
+                const savedSlippage = lib[name].slippage || {};
+                renderFileControls(uniqueFiles, savedMultipliers, savedCapitals, savedSlippage);
 
                 // Restore Date Filters
                 const filters = lib[name].filters || {};
                 document.getElementById('startDateInput').value = filters.start || '';
                 document.getElementById('endDateInput').value = filters.end || '';
 
-                // Apply Filters (also calls calculateAndRender)
-                applyFilters();
+                // Apply Multipliers/Slippage Logic -> Then Render
+                updateMultipliers();
             }
         }
 
@@ -2818,8 +2958,8 @@
             if (!trades || trades.length === 0) {
                 const elWin = document.getElementById('winStreakTableBody');
                 const elLoss = document.getElementById('lossStreakTableBody');
-                if (elWin) elWin.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No Data</td></tr>';
-                if (elLoss) elLoss.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No Data</td></tr>';
+                if (elWin) elWin.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">No Data</td></tr>';
+                if (elLoss) elLoss.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">No Data</td></tr>';
                 return;
             }
 
@@ -2886,14 +3026,24 @@
                 addStreak(Math.abs(currentStreak), currentPnl, false, currentTrades);
             }
 
+            // Calc Totals for Probability
+            const calcTotal = (map) => Object.values(map).reduce((sum, item) => sum + item.count, 0);
+            const totalWinStreaks = calcTotal(winStreaks);
+            const totalLossStreaks = calcTotal(lossStreaks);
+
             // Render Function
-            const renderRows = (dataMap, targetId, isWinTable) => {
+            const renderRows = (dataMap, targetId, isWinTable, totalStreaks) => {
                 const el = document.getElementById(targetId);
                 if (!el) return;
 
                 // Find max length to iterate 1..Max
                 const existingLengths = Object.keys(dataMap).map(Number);
                 const maxLen = existingLengths.length > 0 ? Math.max(...existingLengths) : 0;
+
+                if (maxLen === 0) {
+                    el.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">No Data</td></tr>';
+                    return;
+                }
 
                 let html = '';
                 for (let len = 1; len <= maxLen; len++) {
@@ -2904,6 +3054,7 @@
 
                     const avg = info.count ? info.totalPnl / info.count : 0;
                     const color = isWinTable ? 'text-green' : 'text-red';
+                    const prob = totalStreaks > 0 ? ((info.count / totalStreaks) * 100).toFixed(1) + '%' : '0%';
 
                     // Calc Min/Max
                     let minVal = 0;
@@ -2922,6 +3073,7 @@
                             ${len} in a row
                         </td>
                         <td style="padding:10px 15px; color:#e2e8f0;">${info.count} Times</td>
+                        <td style="padding:10px 15px; color:#94a3b8;">${prob}</td>
                         <td style="padding:10px 15px;" class="${color}">${fmt(info.totalPnl)}</td>
                         <td style="padding:10px 15px;" class="${color}">${fmt(avg)}</td>
                         <td style="padding:10px 15px;" class="${color}">${info.count ? fmt(maxVal) : '-'}</td>
@@ -2931,7 +3083,7 @@
                     // Details Row (Hidden)
                     if (hasData) {
                         html += `<tr id="details-${rowID}" style="display:none; background:#0f172a;">
-                            <td colspan="6" style="padding:0;">
+                            <td colspan="7" style="padding:0;">
                                 <div style="padding:10px 20px; border-left:4px solid var(--accent-color);">
                                     <table style="width:100%; font-size:0.85em;">
                                         <thead>
@@ -2967,16 +3119,16 @@
                         </tr>`;
                     }
                 }
-                el.innerHTML = html || '<tr><td colspan="6" style="text-align:center; padding:10px;">No Streaks</td></tr>';
+                el.innerHTML = html || '<tr><td colspan="7" style="text-align:center; padding:10px;">No Streaks</td></tr>';
             };
 
-            renderRows(winStreaks, 'winStreakTableBody', true);
-            renderRows(lossStreaks, 'lossStreakTableBody', false);
+            renderRows(winStreaks, 'winStreakTableBody', true, totalWinStreaks);
+            renderRows(lossStreaks, 'lossStreakTableBody', false, totalLossStreaks);
         }
 
         function updateView(filteredData) {
             const tradesToUse = filteredData || parsedTrades;
-            if (!tradesToUse.length) return;
+            // if (!tradesToUse.length) return; // Allow rendering empty to clear view
             const mode = document.querySelector('input[name="chartView"]:checked').value;
 
             // Aggregate
@@ -3187,7 +3339,7 @@
             const fmt = fmtMoney;
 
             let bodyHTML = '';
-            Object.keys(years).sort().reverse().forEach(yr => {
+            Object.keys(years).sort().forEach(yr => {
                 const yData = years[yr];
                 const yrId = `fb-yr-${yr}`;
                 const totalClass = yData.total >= 0 ? 'text-green' : 'text-red';
@@ -3207,7 +3359,7 @@
                 bodyHTML += `</tr>`;
 
                 // Month Rows (Hidden Children)
-                yData.months.sort().reverse().forEach(m => {
+                yData.months.sort().forEach(m => {
                     const rowData = pivot[m];
                     const mTotalClass = rowData.total >= 0 ? 'text-green' : 'text-red';
 
