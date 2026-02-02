@@ -521,6 +521,7 @@
             <!-- <button class="tab-btn" onclick="switchTab('time-analysis')">Time Analysis</button> -->
             <button class="tab-btn" onclick="switchTab('streaks')">Streak Analysis</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
+            <button class="tab-btn" onclick="switchTab('correlation')">Correlation</button>
         </nav>
 
         <!-- TAB 1: DASHBOARD -->
@@ -988,6 +989,31 @@
                             </tr>
                         </thead>
                         <tbody id="debugTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: CORRELATION ANALYSIS -->
+        <div id="tab-correlation" class="tab-content">
+            <h2 style="margin-top:0;">Strategy Correlation</h2>
+            <div class="glass-panel">
+                <div class="section-title">Daily P&L Correlation Matrix</div>
+                <p style="color:var(--text-secondary); font-size:0.9em; margin-bottom:15px;">
+                    This matrix calculates the Pearson correlation coefficient between strategies based on their daily
+                    net P&L.
+                    Values range from -1.0 to +1.0.
+                    <br>• <span style="color:#ef4444; font-weight:700;">+1.0</span>: Perfect positive correlation (move
+                    together)
+                    <br>• <span style="color:#f8fafc; font-weight:700;">0.0</span>: No correlation (independent)
+                    <br>• <span style="color:#38bdf8; font-weight:700;">-1.0</span>: Perfect negative correlation (move
+                    oppositely)
+                </p>
+                <div style="overflow-x: auto;">
+                    <table id="correlationMatrixTable"
+                        style="width: auto; border-collapse: separate; border-spacing: 2px;">
+                        <thead id="correlationHead"></thead>
+                        <tbody id="correlationBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -2555,6 +2581,7 @@
             renderEquityCurve(trades);
             renderTradeList(trades);
             updateView(trades);
+            try { renderCorrelationAnalysis(trades); } catch (e) { console.error("Correlation error:", e); }
         }
 
         function formatDate(isoStr) {
@@ -4154,7 +4181,108 @@
             const pct = ((count / total) * 100).toFixed(1);
 
             resEl.textContent = `${count} / ${total} Trades`;
-            pctEl.textContent = `${pct}% Reached Target`;
+            pctEl.textContent = `${pct}% Hit Target`;
+        }
+
+        // --- CORRELATION ANALYSIS (NEW) ---
+        function renderCorrelationAnalysis(trades) {
+            const headEl = document.getElementById('correlationHead');
+            const bodyEl = document.getElementById('correlationBody');
+            if (!headEl || !bodyEl) return;
+
+            if (!trades || trades.length === 0) {
+                headEl.innerHTML = '';
+                bodyEl.innerHTML = '<tr><td style="text-align:center; padding:20px; color:var(--text-secondary);">No Data</td></tr>';
+                return;
+            }
+
+            // 1. Get unique files
+            const files = [...new Set(trades.map(t => t.sourceFile).filter(Boolean))].sort();
+
+            if (files.length < 2) {
+                headEl.innerHTML = '';
+                bodyEl.innerHTML = '<tr><td style="text-align:center; padding:20px; color:var(--text-secondary);">Need at least 2 active files for correlation analysis. Current active files: ' + files.length + '</td></tr>';
+                return;
+            }
+
+            // 2. Group P&L by daily date and file
+            const dailyData = {};
+            trades.forEach(t => {
+                if (!dailyData[t.daily]) dailyData[t.daily] = {};
+                if (!dailyData[t.daily][t.sourceFile]) dailyData[t.daily][t.sourceFile] = 0;
+                dailyData[t.daily][t.sourceFile] += t.pnl;
+            });
+
+            const dates = Object.keys(dailyData).sort();
+
+            // 3. Build time series for each file
+            const series = {};
+            files.forEach(f => {
+                series[f] = dates.map(d => dailyData[d][f] || 0);
+            });
+
+            // 4. Helper: Pearson
+            const calcPearson = (x, y) => {
+                const n = x.length;
+                if (n === 0) return 0;
+                let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+                for (let i = 0; i < n; i++) {
+                    sumX += x[i]; sumY += y[i];
+                    sumXY += x[i] * y[i];
+                    sumX2 += x[i] * x[i]; sumY2 += y[i] * y[i];
+                }
+                const num = n * sumXY - sumX * sumY;
+                const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+                return den === 0 ? 0 : num / den;
+            };
+
+            // 5. Build Head
+            let headHtml = '<tr><th style="background:transparent;"></th>';
+            files.forEach(f => {
+                headHtml += `<th style="text-align:center; min-width:80px; font-size:0.7em;">${f}</th>`;
+            });
+            headHtml += '</tr>';
+            headEl.innerHTML = headHtml;
+
+            // 6. Build Body
+            let bodyHtml = '';
+            for (let i = 0; i < files.length; i++) {
+                const f1 = files[i];
+                bodyHtml += `<tr><td style="font-weight:700; color:var(--text-secondary); font-size:0.75em; padding:8px;">${f1}</td>`;
+
+                for (let j = 0; j < files.length; j++) {
+                    const f2 = files[j];
+                    const r = calcPearson(series[f1], series[f2]);
+
+                    // Heatmap logic
+                    // High Positive (Red) -> 1.0
+                    // Medium Positive (Amber) -> 0.5
+                    // Zero/Low (Greenish) -> 0.0
+                    // Negative (Blue) -> -1.0
+
+                    let bgColor = '#1e293b';
+                    let textColor = '#f8fafc';
+
+                    if (i === j) {
+                        bgColor = 'rgba(255,255,255,0.05)';
+                        textColor = 'var(--text-secondary)';
+                    } else if (r > 0.7) {
+                        bgColor = 'rgba(239, 68, 68, 0.4)'; // Red-ish for high risk correlation
+                    } else if (r > 0.4) {
+                        bgColor = 'rgba(245, 158, 11, 0.3)'; // Amber
+                    } else if (r >= 0) {
+                        bgColor = 'rgba(16, 185, 129, 0.2)'; // Green-ish for positive independence
+                    } else {
+                        bgColor = 'rgba(56, 189, 248, 0.3)'; // Blue for negative (diversification)
+                    }
+
+                    bodyHtml += `<td style="text-align:center; padding:10px; background:${bgColor}; color:${textColor}; font-weight:700; border-radius:4px; font-family:monospace;">
+                        ${r.toFixed(2)}
+                    </td>`;
+                }
+                bodyHtml += '</tr>';
+            }
+            bodyEl.innerHTML = bodyHtml;
         }
 
         function calculateDrawdownHit() {
