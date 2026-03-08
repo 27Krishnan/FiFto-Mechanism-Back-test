@@ -34,12 +34,14 @@ window.initPnLApp = function () {
         // State
         const DATA_DEFAULTS = {
             owners: ['Owner 1', 'Owner 2'],
-            types: ['Intraday', 'Delivery', 'F&O', 'Currency', 'Commodity']
+            types: ['Intraday', 'Delivery', 'F&O', 'Currency', 'Commodity'],
+            subCategories: {} // { 'Intraday': ['Equity', 'Option'], ... }
         };
 
         let appData = {
             owners: [],
-            types: []
+            types: [],
+            subCategories: {}
         };
 
         // UI State
@@ -47,6 +49,7 @@ window.initPnLApp = function () {
         let activeInput = null;
         let activeSourceKey = null; // 'owners' or 'types'
         let managingSourceKey = null; // For the modal
+        let managingTypeKey = null; // For sub-category management
         let hideTimeout = null; // To manage blur race conditions
         let ownerChart = null; // Chart Instance
         let typeChart = null; // Type Chart Instance
@@ -54,6 +57,7 @@ window.initPnLApp = function () {
         let globalOwnerEquityChart = null; // ALL Owners Equity Chart
         let monthlyTrendChart = null; // Monthly Trend Chart Instance
         let monthlyDailyChart = null; // Monthly Daily Trend Chart Instance
+        let subCatChart = null; // Sub Category Chart Instance
 
         // Settings State
         let settingsGASUrl = localStorage.getItem('gas_url') || '';
@@ -103,6 +107,43 @@ window.initPnLApp = function () {
                 monthlyDailyCanvas.classList.remove('hidden');
                 monthlyTrendCanvas.classList.add('hidden');
                 updateMonthlyDailyChart(); // Refresh daily data for monthly view
+            });
+        }
+
+        // CSV Import Event Listeners
+        const btnImportPnlCSV = document.getElementById('btn-import-pnl-csv');
+        const pnlCSVImportInput = document.getElementById('pnl-csv-import');
+
+        if (btnImportPnlCSV && pnlCSVImportInput) {
+            btnImportPnlCSV.onclick = () => pnlCSVImportInput.click();
+            pnlCSVImportInput.onchange = (e) => handleCSVImport(e);
+        }
+
+        const btnSyncNow = document.getElementById('btn-sync-now');
+        if (btnSyncNow) {
+            btnSyncNow.addEventListener('click', () => {
+                console.log("Sync Now triggered");
+                // 1. Force a save of current table state to localStorage
+                saveTableRows();
+
+                // 2. Fetch the newly saved rows
+                const rows = JSON.parse(localStorage.getItem('pl_report_rows') || '[]');
+
+                // 3. Check for URL
+                if (!settingsGASUrl) {
+                    alert('Google Apps Script URL is not set.\n\nTo sync data:\n1. Open Settings (Gear icon top-right)\n2. Paste your Google Apps Script URL\n3. Click Save & Sync');
+                    return;
+                }
+
+                // 4. Check for data
+                if (rows.length === 0) {
+                    alert('Nothing to sync. Please add some trades to the table first.');
+                    return;
+                }
+
+                // 5. Trigger Sync
+                syncToGoogleSheets(rows);
+                console.log("Sync To Google Sheets called with", rows.length, "rows");
             });
         }
 
@@ -386,9 +427,9 @@ window.initPnLApp = function () {
             trs.forEach(tr => {
                 try {
                     const inputs = tr.querySelectorAll('input');
-                    if (inputs.length > 4) {
-                        const exitDateStr = inputs[3].value;
-                        const plVal = parseFloat(inputs[4].value);
+                    if (inputs.length > 5) {
+                        const exitDateStr = inputs[4].value;
+                        const plVal = parseFloat(inputs[5].value);
 
                         if (exitDateStr && !isNaN(plVal)) {
                             const exitDate = parseRobustDate(exitDateStr);
@@ -479,6 +520,7 @@ window.initPnLApp = function () {
             try { if (typeof updateDailyChart === 'function') updateDailyChart(); } catch (e) { console.error(e); }
             try { if (typeof updateGlobalOwnerEquityChart === 'function') updateGlobalOwnerEquityChart(); } catch (e) { console.error(e); }
             try { if (typeof updateCumulativePL === 'function') updateCumulativePL(); } catch (e) { console.error(e); }
+            try { if (typeof updateSubCatReport === 'function') updateSubCatReport(); } catch (e) { console.error(e); }
             try { if (typeof updateDetailedReport === 'function') updateDetailedReport(); } catch (e) { console.error(e); }
 
             // Auto-update monthly view if visible
@@ -495,10 +537,10 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                // Index 3 is Exit Date, 4 is P/L
-                if (inputs.length > 4) {
-                    const exitDate = inputs[3].value;
-                    const plVal = parseFloat(inputs[4].value);
+                // Index 4 is Exit Date, 5 is P/L
+                if (inputs.length > 5) {
+                    const exitDate = inputs[4].value;
+                    const plVal = parseFloat(inputs[5].value);
 
                     if (exitDate && !isNaN(plVal)) {
                         const dateObj = parseRobustDate(exitDate);
@@ -641,12 +683,13 @@ window.initPnLApp = function () {
             const allTrades = [];
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length > 4) {
+                if (inputs.length > 5) {
                     const entryDate = inputs[0].value;
                     const owner = inputs[1].value;
                     const type = inputs[2].value;
-                    const exitDateStr = inputs[3].value;
-                    const pl = parseFloat(inputs[4].value);
+                    const subCategory = inputs[3].value;
+                    const exitDateStr = inputs[4].value;
+                    const pl = parseFloat(inputs[5].value);
                     if (exitDateStr && !isNaN(pl)) {
                         const dateObj = parseRobustDate(exitDateStr);
                         if (dateObj) {
@@ -769,6 +812,7 @@ window.initPnLApp = function () {
 
             if (elDD) {
                 elDD.textContent = (-maxDrawdown).toFixed(2);
+                elDD.className = 'metric-value negative';
                 elDDDate.textContent = drawdownDate || '--';
             }
 
@@ -914,11 +958,11 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const dateStr = inputs[0].value; // Entry Date or Exit Date? Let's use Exit Date for consistency with Monthly aggregation
-                    const exitDateStr = inputs[3].value;
+                if (inputs.length >= 6) {
+                    const dateStr = inputs[0].value;
+                    const exitDateStr = inputs[4].value;
                     const owner = inputs[1].value.trim();
-                    const pl = parseFloat(inputs[4].value);
+                    const pl = parseFloat(inputs[5].value);
 
                     if (owner && !isNaN(pl)) {
                         // Filter logic
@@ -947,6 +991,9 @@ window.initPnLApp = function () {
                 const tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
                 tr.onclick = () => showDrillDown('Owner', stat.name);
+                tr.style.cursor = 'pointer';
+                tr.title = 'Click to view all trades for this owner';
+
                 tr.innerHTML = `
                 <td class="col-rank">${i + 1}</td>
                 <td style="color: ${getColorForString(stat.name)}; font-weight: 500;">${stat.name}</td>
@@ -964,15 +1011,35 @@ window.initPnLApp = function () {
             const now = new Date();
             const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
+            const typeFilterEl = document.getElementById('filter-monthly-type');
+            const typeFilter = typeFilterEl ? typeFilterEl.value : '';
+
+            const subCatFilterEl = document.getElementById('filter-monthly-subcat');
+            const subCatFilter = subCatFilterEl ? subCatFilterEl.value : '';
+
+            // Get all unique sub categories and types for the dropdowns
+            const allSubCats = new Set();
+            const allTypes = new Set();
+
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
-                    const type = inputs[2].value.trim();
-                    const pl = parseFloat(inputs[4].value);
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
+                    const typeValue = inputs[2].value.trim();
+                    const subCatValue = inputs[3].value.trim();
+                    const pl = parseFloat(inputs[5].value);
 
-                    if (type && !isNaN(pl)) {
-                        // Filter logic
+                    if (typeValue) allTypes.add(typeValue);
+                    if (subCatValue) allSubCats.add(subCatValue);
+
+                    if (typeValue && !isNaN(pl)) {
+                        // Type Filter logic
+                        if (typeFilter && typeValue !== typeFilter) return;
+
+                        // Sub Category Filter logic
+                        if (subCatFilter && subCatValue !== subCatFilter) return;
+
+                        // Filter logic (Include Current Month)
                         if (!includeCurrent && exitDateStr) {
                             const dateObj = parseRobustDate(exitDateStr);
                             if (dateObj) {
@@ -981,32 +1048,158 @@ window.initPnLApp = function () {
                             }
                         }
 
-                        if (!typeStats[type]) typeStats[type] = { pl: 0, trades: 0 };
-                        typeStats[type].pl += pl;
-                        typeStats[type].trades += 1;
+                        if (!typeStats[typeValue]) typeStats[typeValue] = { pl: 0, trades: 0, tradesList: [] };
+                        typeStats[typeValue].pl += pl;
+                        typeStats[typeValue].trades += 1;
+                        typeStats[typeValue].tradesList.push({ date: parseRobustDate(exitDateStr), pl: pl });
                     }
                 }
             });
+
+            // Populate Type Dropdown
+            if (typeFilterEl) {
+                const currentVal = typeFilterEl.value;
+                const sortedTypes = Array.from(allTypes).sort();
+
+                // Only rebuild if changed
+                const existingOptions = Array.from(typeFilterEl.options).map(o => o.value).filter(v => v !== '');
+                if (JSON.stringify(existingOptions) !== JSON.stringify(sortedTypes)) {
+                    typeFilterEl.innerHTML = '<option value="">All Types</option>';
+                    sortedTypes.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t;
+                        opt.textContent = t;
+                        if (t === currentVal) opt.selected = true;
+                        typeFilterEl.appendChild(opt);
+                    });
+                }
+
+                if (!typeFilterEl.dataset.listenerAdded) {
+                    typeFilterEl.addEventListener('change', updateMonthlyTypeReport);
+                    typeFilterEl.dataset.listenerAdded = 'true';
+                }
+            }
+
+            // Populate Sub Category Dropdown
+            if (subCatFilterEl) {
+                const currentVal = subCatFilterEl.value;
+                const globalSubCats = new Set();
+                for (const type in appData.subCategories) {
+                    if (Array.isArray(appData.subCategories[type])) {
+                        appData.subCategories[type].forEach(cat => globalSubCats.add(cat));
+                    }
+                }
+                const sortedSubCats = Array.from(globalSubCats).sort();
+
+                // Only rebuild if the options have changed significantly or first load
+                const existingOptions = Array.from(subCatFilterEl.options).map(o => o.value).filter(v => v !== '');
+                const optionsChanged = JSON.stringify(existingOptions) !== JSON.stringify(sortedSubCats);
+
+                if (optionsChanged) {
+                    subCatFilterEl.innerHTML = '<option value="">All Sub Categories</option>';
+                    sortedSubCats.forEach(cat => {
+                        const opt = document.createElement('option');
+                        opt.value = cat;
+                        opt.textContent = cat;
+                        if (cat === currentVal) opt.selected = true;
+                        subCatFilterEl.appendChild(opt);
+                    });
+                }
+
+                // Add event listener once
+                if (!subCatFilterEl.dataset.listenerAdded) {
+                    subCatFilterEl.addEventListener('change', updateMonthlyTypeReport);
+                    subCatFilterEl.dataset.listenerAdded = 'true';
+                }
+            }
+
             const sorted = Object.keys(typeStats).map(k => ({ name: k, ...typeStats[k] })).sort((a, b) => b.pl - a.pl);
             const tbody = document.getElementById('monthly-overall-type-body');
-            const filterVal = (document.getElementById('filter-monthly-type')?.value || '').toLowerCase();
+
+            // Load saved capitals and manual stats
+            const savedCapitals = JSON.parse(localStorage.getItem('pnl_type_capitals') || '{}');
+            const savedStats = JSON.parse(localStorage.getItem('pnl_type_stats') || '{}');
 
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            sorted.filter(s => s.name.toLowerCase().includes(filterVal)).forEach((stat, i) => {
+            sorted.forEach((stat, i) => {
                 const tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
-                tr.onclick = () => showDrillDown('Type', stat.name);
+                tr.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        showDrillDown('Type', stat.name);
+                    }
+                };
+                tr.title = 'Click to view all trades for this type';
+
+
+                const cap = savedCapitals[stat.name] || '';
+                const plMinusCap = cap ? (stat.pl - parseFloat(cap)) : 0;
+                // Removed color class logic for P/L - Cap
+                const plMinusCapText = cap ? plMinusCap.toFixed(2) : '-';
+
+                // Manual Stats
+                const typeStats = savedStats[stat.name] || {};
+                const maxProfit = typeStats.maxProfit || '';
+                const drawdown = typeStats.drawdown || '';
+
                 tr.innerHTML = `
                 <td class="col-rank">${i + 1}</td>
                 <td>${stat.name}</td>
                 <td class="pl-text ${stat.pl >= 0 ? 'positive' : 'negative'} text-right col-pl">${stat.pl.toFixed(2)}</td>
                 <td class="text-right col-trades">${stat.trades}</td>
+                <td class="text-right">
+                    <input type="number" class="type-cap-input" value="${cap}" placeholder="0" 
+                        style="width: 80px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); text-align: right;"
+                        onclick="event.stopPropagation()"
+                        oninput="updateTypeCap('${stat.name}', this.value, ${stat.pl}, this)">
+                </td>
+                <td class="text-right pl-minus-cap" style="color: var(--text-primary);">${plMinusCapText}</td>
+                <td class="text-right">
+                     <input type="text" value="${maxProfit}" placeholder="-" 
+                        style="width: 80px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); text-align: right;"
+                        onclick="event.stopPropagation()"
+                        oninput="updateTypeStats('${stat.name}', 'maxProfit', this.value)">
+                </td>
+                <td class="text-right">
+                     <input type="text" value="${drawdown}" placeholder="-" 
+                        style="width: 80px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); text-align: right;"
+                        onclick="event.stopPropagation()"
+                        oninput="updateTypeStats('${stat.name}', 'drawdown', this.value)">
+                </td>
             `;
                 tbody.appendChild(tr);
             });
         }
+
+        window.updateTypeCap = function (typeName, capValue, totalPL, inputEl) {
+            const savedCapitals = JSON.parse(localStorage.getItem('pnl_type_capitals') || '{}');
+            savedCapitals[typeName] = capValue;
+            localStorage.setItem('pnl_type_capitals', JSON.stringify(savedCapitals));
+
+            const row = inputEl.closest('tr');
+            const targetCell = row.querySelector('.pl-minus-cap');
+
+            if (capValue) {
+                const diff = totalPL - parseFloat(capValue);
+                targetCell.textContent = diff.toFixed(2);
+                // Ensure no color class is added
+                targetCell.className = `text-right pl-minus-cap`;
+                targetCell.style.color = 'var(--text-primary)';
+            } else {
+                targetCell.textContent = '-';
+                targetCell.className = `text-right pl-minus-cap`;
+            }
+        };
+
+        window.updateTypeStats = function (typeName, field, value) {
+            const savedStats = JSON.parse(localStorage.getItem('pnl_type_stats') || '{}');
+            if (!savedStats[typeName]) savedStats[typeName] = {};
+            savedStats[typeName][field] = value;
+            localStorage.setItem('pnl_type_stats', JSON.stringify(savedStats));
+        };
+
 
         function updateMonthlyDetailedReport() {
             const trs = tableBody.querySelectorAll('tr');
@@ -1017,11 +1210,11 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
                     const owner = inputs[1].value.trim();
                     const type = inputs[2].value.trim();
-                    const pl = parseFloat(inputs[4].value);
+                    const pl = parseFloat(inputs[5].value);
 
                     if (owner && type && !isNaN(pl)) {
                         // Filter logic
@@ -1053,6 +1246,10 @@ window.initPnLApp = function () {
                 s.type.toLowerCase().includes(filterType)
             ).forEach((stat, i) => {
                 const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.title = 'Click to view trades';
+                tr.onclick = () => showDrillDown('Owner|Type', `${stat.owner}|${stat.type}`);
+
                 tr.innerHTML = `
                 <td class="col-rank">${i + 1}</td>
                 <td style="color: ${getColorForString(stat.owner)}; font-weight: 500;">${stat.owner}</td>
@@ -1096,10 +1293,10 @@ window.initPnLApp = function () {
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
                 // inputs[1] is Owner 
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
                     const owner = inputs[1].value.trim();
-                    const pl = parseFloat(inputs[4].value);
+                    const pl = parseFloat(inputs[5].value);
 
                     if (exitDateStr && owner && !isNaN(pl)) {
                         const exitDate = parseRobustDate(exitDateStr);
@@ -1175,21 +1372,36 @@ window.initPnLApp = function () {
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
 
+            const subCatFilterEl = document.getElementById('filter-dash-subcat');
+            const subCatFilter = subCatFilterEl ? subCatFilterEl.value : '';
+
+            // Get all unique sub categories for the current month's trades
+            const allSubCats = new Set();
+
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
                     const type = inputs[2].value.trim();
-                    const pl = parseFloat(inputs[4].value);
+                    const subCat = inputs[3].value.trim();
+                    const pl = parseFloat(inputs[5].value);
 
                     if (exitDateStr && type && !isNaN(pl)) {
                         const exitDate = parseRobustDate(exitDateStr);
                         if (exitDate && exitDate.getFullYear() === currentYear && exitDate.getMonth() === currentMonth) {
+
+                            if (subCat) allSubCats.add(subCat);
+
+                            // Sub Category Filter logic
+                            if (subCatFilter && subCat !== subCatFilter) return;
+
                             if (!typeStats[type]) {
-                                typeStats[type] = { pl: 0, trades: 0, wins: 0, grossWin: 0, grossLoss: 0 };
+                                typeStats[type] = { pl: 0, trades: 0, wins: 0, grossWin: 0, grossLoss: 0, tradesList: [] };
                             }
                             typeStats[type].pl += pl;
                             typeStats[type].trades += 1;
+                            typeStats[type].tradesList.push({ date: exitDate, pl: pl }); // Store for DD Calc
+
                             if (pl > 0) {
                                 typeStats[type].wins += 1;
                                 typeStats[type].grossWin += pl;
@@ -1200,6 +1412,39 @@ window.initPnLApp = function () {
                     }
                 }
             });
+
+            // Populate Sub Category Dropdown
+            if (subCatFilterEl) {
+                const currentVal = subCatFilterEl.value;
+                const globalSubCats = new Set();
+                for (const type in appData.subCategories) {
+                    if (Array.isArray(appData.subCategories[type])) {
+                        appData.subCategories[type].forEach(cat => globalSubCats.add(cat));
+                    }
+                }
+                const sortedSubCats = Array.from(globalSubCats).sort();
+
+                // Only rebuild if changed
+                const existingOptions = Array.from(subCatFilterEl.options).map(o => o.value).filter(v => v !== '');
+                const optionsChanged = JSON.stringify(existingOptions) !== JSON.stringify(sortedSubCats);
+
+                if (optionsChanged) {
+                    subCatFilterEl.innerHTML = '<option value="">All Sub Categories</option>';
+                    sortedSubCats.forEach(cat => {
+                        const opt = document.createElement('option');
+                        opt.value = cat;
+                        opt.textContent = cat;
+                        if (cat === currentVal) opt.selected = true;
+                        subCatFilterEl.appendChild(opt);
+                    });
+                }
+
+                // Add event listener once
+                if (!subCatFilterEl.dataset.listenerAdded) {
+                    subCatFilterEl.addEventListener('change', updateTypeReport);
+                    subCatFilterEl.dataset.listenerAdded = 'true';
+                }
+            }
 
             // Convert to array and sort by P/L descending
             const sortedTypes = Object.keys(typeStats).map(key => ({
@@ -1220,6 +1465,8 @@ window.initPnLApp = function () {
                 const losses = stat.trades - stat.wins;
                 const avgLoss = losses > 0 ? stat.grossLoss / losses : 0;
                 const rr = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : (avgWin > 0 ? 'MAX' : '0.00');
+
+
 
                 // Enable Drill Down
                 tr.style.cursor = 'pointer';
@@ -1243,6 +1490,154 @@ window.initPnLApp = function () {
                 updateTypeChart(sortedTypes);
             }
         }
+
+        // --- Sub-Category Performance Report Logic (NEW) ---
+        function updateSubCatReport() {
+            const trs = tableBody.querySelectorAll('tr');
+            const subCatStats = {};
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            const subCatTypeFilterEl = document.getElementById('filter-subcat-type');
+            const subCatTypeFilter = subCatTypeFilterEl ? subCatTypeFilterEl.value : '';
+
+            const allTypes = new Set();
+
+            trs.forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
+                    const type = inputs[2].value.trim();
+                    const subCat = inputs[3].value.trim() || '--';
+                    const pl = parseFloat(inputs[5].value);
+
+                    if (exitDateStr && !isNaN(pl)) {
+                        const exitDate = parseRobustDate(exitDateStr);
+                        if (exitDate && exitDate.getFullYear() === currentYear && exitDate.getMonth() === currentMonth) {
+
+                            if (type) allTypes.add(type);
+
+                            // Type Filter logic
+                            if (subCatTypeFilter && type !== subCatTypeFilter) return;
+
+                            if (!subCatStats[subCat]) {
+                                subCatStats[subCat] = { pl: 0, trades: 0, wins: 0, grossWin: 0, grossLoss: 0 };
+                            }
+                            subCatStats[subCat].pl += pl;
+                            subCatStats[subCat].trades += 1;
+                            if (pl > 0) {
+                                subCatStats[subCat].wins += 1;
+                                subCatStats[subCat].grossWin += pl;
+                            } else if (pl < 0) {
+                                subCatStats[subCat].grossLoss += Math.abs(pl);
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Populate Type Dropdown for SubCat Report
+            if (subCatTypeFilterEl) {
+                const currentVal = subCatTypeFilterEl.value;
+                const sortedTypes = Array.from(allTypes).sort();
+
+                // Only rebuild if changed
+                const existingOptions = Array.from(subCatTypeFilterEl.options).map(o => o.value).filter(v => v !== '');
+                if (JSON.stringify(existingOptions) !== JSON.stringify(sortedTypes)) {
+                    subCatTypeFilterEl.innerHTML = '<option value="">All Types</option>';
+                    sortedTypes.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t;
+                        opt.textContent = t;
+                        if (t === currentVal) opt.selected = true;
+                        subCatTypeFilterEl.appendChild(opt);
+                    });
+                }
+
+                if (!subCatTypeFilterEl.dataset.listenerAdded) {
+                    subCatTypeFilterEl.addEventListener('change', updateSubCatReport);
+                    subCatTypeFilterEl.dataset.listenerAdded = 'true';
+                }
+            }
+
+            // Convert to array and sort by P/L descending
+            const sortedSubCats = Object.keys(subCatStats).map(key => ({
+                name: key,
+                ...subCatStats[key]
+            })).sort((a, b) => b.pl - a.pl);
+
+            // Render
+            const tbody = document.getElementById('subcat-pl-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            sortedSubCats.forEach((stat, index) => {
+                const tr = document.createElement('tr');
+
+                const winRate = stat.trades > 0 ? (stat.wins / stat.trades * 100).toFixed(1) : '0.0';
+                const avgWin = stat.wins > 0 ? stat.grossWin / stat.wins : 0;
+                const losses = stat.trades - stat.wins;
+                const avgLoss = losses > 0 ? stat.grossLoss / losses : 0;
+                const rr = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : (avgWin > 0 ? 'MAX' : '0.00');
+
+                // Enable Drill Down
+                tr.style.cursor = 'pointer';
+                tr.title = 'Click to view trades';
+                const mKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                tr.onclick = () => showDrillDown('SubCategory', stat.name, mKey);
+
+                tr.innerHTML = `
+            <td class="col-rank">${index + 1}</td>
+            <td>${stat.name}</td>
+            <td class="pl-text ${stat.pl >= 0 ? 'positive' : 'negative'} text-right col-pl">${stat.pl.toFixed(2)}</td>
+            <td class="text-right col-trades">${stat.trades}</td>
+            <td class="text-right col-win">${winRate}%</td>
+            <td class="text-right col-rr">${rr}</td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            // Update SubCat Chart
+            if (typeof updateSubCatChart === 'function') {
+                updateSubCatChart(sortedSubCats);
+            }
+        }
+
+        function updateSubCatChart(subCatsData) {
+            if (!subCatChart) {
+                const ctx = document.getElementById('subCatChart');
+                if (!ctx) return;
+                subCatChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+
+            const labels = subCatsData.map(t => t.name);
+            const data = subCatsData.map(t => Math.abs(t.pl));
+            const backgroundColors = subCatsData.map(t => getColorForString(t.name));
+
+            subCatChart.data.labels = labels;
+            subCatChart.data.datasets[0].data = data;
+            subCatChart.data.datasets[0].backgroundColor = backgroundColors;
+            subCatChart.update();
+        }
         // --- Detailed Report Logic ---
         function updateDetailedReport() {
             // Aggregate by Owner + Type
@@ -1255,11 +1650,11 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
                     const owner = inputs[1].value.trim();
                     const type = inputs[2].value.trim();
-                    const pl = parseFloat(inputs[4].value);
+                    const pl = parseFloat(inputs[5].value);
 
                     if (exitDateStr && owner && type && !isNaN(pl)) {
                         const exitDate = parseRobustDate(exitDateStr);
@@ -1479,9 +1874,9 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
-                    const pl = parseFloat(inputs[4].value);
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
+                    const pl = parseFloat(inputs[5].value);
 
                     if (exitDateStr && !isNaN(pl)) {
                         const exitDate = parseRobustDate(exitDateStr);
@@ -1529,9 +1924,9 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
-                    const pl = parseFloat(inputs[4].value);
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
+                    const pl = parseFloat(inputs[5].value);
 
                     if (exitDateStr && !isNaN(pl)) {
                         const exitDate = parseRobustDate(exitDateStr);
@@ -1578,10 +1973,10 @@ window.initPnLApp = function () {
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
                     const owner = inputs[1].value.trim() || 'Unknown';
-                    const pl = parseFloat(inputs[4].value);
+                    const pl = parseFloat(inputs[5].value);
 
                     if (exitDateStr && !isNaN(pl)) {
                         const exitDate = parseRobustDate(exitDateStr);
@@ -1659,7 +2054,12 @@ window.initPnLApp = function () {
 
         function renderManageList(filterText = '') {
             managementList.innerHTML = '';
-            let list = appData[managingSourceKey] || [];
+            let list = [];
+            if (managingSourceKey === 'subCategories') {
+                list = appData.subCategories[managingTypeKey] || [];
+            } else {
+                list = appData[managingSourceKey] || [];
+            }
 
             // Filter
             if (filterText) {
@@ -1675,11 +2075,37 @@ window.initPnLApp = function () {
             list.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'owner-item';
+                li.dataset.originalValue = item; // Store original value for reference
 
                 const span = document.createElement('span');
                 span.className = 'owner-name';
                 span.textContent = item;
 
+                const actionsDiv = document.createElement('div');
+                actionsDiv.style.display = 'flex';
+                actionsDiv.style.gap = '8px';
+
+                // Edit Button
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.style.opacity = '1';
+                editBtn.style.background = 'none';
+                editBtn.style.border = 'none';
+                editBtn.style.cursor = 'pointer';
+                editBtn.style.color = 'var(--text-secondary)';
+                editBtn.title = 'Edit Item';
+                editBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                `;
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    enableEditMode(item, li);
+                };
+
+                // Delete Button
                 const delBtn = document.createElement('button');
                 delBtn.className = 'delete-btn';
                 delBtn.style.opacity = '1';
@@ -1688,13 +2114,170 @@ window.initPnLApp = function () {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
                 </svg>
-            `;
-                delBtn.onclick = () => deleteItem(item);
+                `;
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (managingSourceKey === 'subCategories') {
+                        deleteSubCatItem(item);
+                    } else {
+                        deleteItem(item);
+                    }
+                };
+
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(delBtn);
 
                 li.appendChild(span);
-                li.appendChild(delBtn);
+                li.appendChild(actionsDiv);
                 managementList.appendChild(li);
             });
+        }
+
+        function enableEditMode(originalItem, li) {
+            // Clear current content
+            li.innerHTML = '';
+            li.style.padding = '8px';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalItem;
+            input.className = 'cell-input'; // Reuse table input style
+            input.style.width = '100%';
+            input.style.marginBottom = '8px';
+            input.style.color = 'var(--text-primary)';
+            input.style.background = 'var(--bg-card)';
+            input.style.border = '1px solid var(--border-color)';
+            input.style.padding = '6px';
+            input.style.borderRadius = '4px';
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.style.display = 'flex';
+            actionsDiv.style.gap = '8px';
+            actionsDiv.style.justifyContent = 'flex-end';
+
+            // Save Button
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save';
+            saveBtn.style.padding = '4px 12px';
+            saveBtn.style.borderRadius = '4px';
+            saveBtn.style.background = 'var(--accent-color)';
+            saveBtn.style.color = '#fff';
+            saveBtn.style.border = 'none';
+            saveBtn.style.cursor = 'pointer';
+            saveBtn.onclick = () => saveManagedItem(originalItem, input.value.trim());
+
+            // Cancel Button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.padding = '4px 12px';
+            cancelBtn.style.borderRadius = '4px';
+            cancelBtn.style.background = 'transparent';
+            cancelBtn.style.color = 'var(--text-secondary)';
+            cancelBtn.style.border = '1px solid var(--border-color)';
+            cancelBtn.style.cursor = 'pointer';
+            cancelBtn.onclick = () => renderManageList(); // Re-render to cancel
+
+            actionsDiv.appendChild(cancelBtn);
+            actionsDiv.appendChild(saveBtn);
+
+            li.appendChild(input);
+            li.appendChild(actionsDiv);
+
+            input.focus();
+
+            // Handle Enter key to save
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') saveManagedItem(originalItem, input.value.trim());
+                if (e.key === 'Escape') renderManageList();
+            });
+        }
+
+        function saveManagedItem(oldValue, newValue) {
+            if (!newValue) {
+                alert('Value cannot be empty.');
+                return;
+            }
+            if (newValue === oldValue) {
+                renderManageList(); // No change
+                return;
+            }
+
+            let list = [];
+            if (managingSourceKey === 'subCategories') {
+                list = appData.subCategories[managingTypeKey];
+            } else {
+                list = appData[managingSourceKey];
+            }
+
+            // Check for duplicates
+            if (list.some(item => item.toLowerCase() === newValue.toLowerCase() && item !== oldValue)) {
+                alert('This item already exists.');
+                return;
+            }
+
+            // 1. Update List in AppData
+            const index = list.indexOf(oldValue);
+            if (index !== -1) {
+                list[index] = newValue;
+                list.sort((a, b) => a.localeCompare(b));
+                if (managingSourceKey === 'subCategories') {
+                    localStorage.setItem('pnl_sub_categories', JSON.stringify(appData.subCategories));
+                } else {
+                    saveData(managingSourceKey);
+                }
+            }
+
+            // 2. Update Historical Data (All Rows)
+            const rows = JSON.parse(localStorage.getItem('pl_report_rows') || '[]');
+            let rowProperty = '';
+            if (managingSourceKey === 'owners') rowProperty = 'owner';
+            if (managingSourceKey === 'types') rowProperty = 'type';
+            if (managingSourceKey === 'subCategories') rowProperty = 'subCategory';
+
+            if (rowProperty) {
+                rows.forEach(row => {
+                    if (rowProperty === 'subCategory') {
+                        // Only update if it's the correct Type as well
+                        if (row.type === managingTypeKey && row.subCategory === oldValue) {
+                            row.subCategory = newValue;
+                        }
+                    } else {
+                        if (row[rowProperty] === oldValue) row[rowProperty] = newValue;
+                    }
+                });
+                localStorage.setItem('pl_report_rows', JSON.stringify(rows));
+            }
+
+            if (rowProperty) {
+                let updateCount = 0;
+                rows.forEach(row => {
+                    if (row[rowProperty] === oldValue) {
+                        row[rowProperty] = newValue;
+                        updateCount++;
+                    }
+                });
+
+                if (updateCount > 0) {
+                    localStorage.setItem('pl_report_rows', JSON.stringify(rows));
+                    // Reload table to reflect changes
+                    loadTableRows(); // Will re-render table
+
+                    // Also update charts/stats
+                    if (typeof updateDashboard === 'function') updateDashboard();
+                }
+            }
+
+            // 3. Setup Migration for Old Keys in LocalStorage (Optional but good for Pnl Capitals etc)
+            if (managingSourceKey === 'types') {
+                const savedCapitals = JSON.parse(localStorage.getItem('pnl_type_capitals') || '{}');
+                if (savedCapitals[oldValue]) {
+                    savedCapitals[newValue] = savedCapitals[oldValue];
+                    delete savedCapitals[oldValue];
+                    localStorage.setItem('pnl_type_capitals', JSON.stringify(savedCapitals));
+                }
+            }
+
+            renderManageList();
         }
 
         function deleteItem(itemToDelete) {
@@ -1705,8 +2288,17 @@ window.initPnLApp = function () {
             }
         }
 
+        function deleteSubCatItem(itemToDelete) {
+            if (confirm(`Delete Sub Category "${itemToDelete}" for ${managingTypeKey}?`)) {
+                appData.subCategories[managingTypeKey] = appData.subCategories[managingTypeKey].filter(i => i !== itemToDelete);
+                localStorage.setItem('pnl_sub_categories', JSON.stringify(appData.subCategories));
+                renderManageList();
+            }
+        }
+
         // --- Data Logic ---
         function loadAllData() {
+            // Load Dropdown Options
             // Load Dropdown Options
             ['owners', 'types'].forEach(key => {
                 let data = JSON.parse(localStorage.getItem(key));
@@ -1729,6 +2321,12 @@ window.initPnLApp = function () {
                 appData[key] = data;
                 saveData(key);
             });
+
+            // Load Sub Categories
+            let subCats = JSON.parse(localStorage.getItem('pnl_sub_categories'));
+            if (!subCats) subCats = DATA_DEFAULTS.subCategories || {};
+            appData.subCategories = subCats;
+            localStorage.setItem('pnl_sub_categories', JSON.stringify(appData.subCategories));
 
             // Load Table Rows
             loadTableRows();
@@ -1768,14 +2366,15 @@ window.initPnLApp = function () {
                 // But let's be robust.
                 // Indices in querySelectorAll might vary if disabled/hidden, but here likely consistent.
                 // inputs[0]=Date, inputs[1]=Owner, inputs[2]=Type, inputs[3]=Exit, inputs[4]=PL, inputs[5]=Remark
-                if (inputs.length >= 6) {
+                if (inputs.length >= 7) {
                     rows.push({
                         date: inputs[0].value,
                         owner: inputs[1].value,
                         type: inputs[2].value,
-                        exitDate: inputs[3].value,
-                        pl: inputs[4].value,
-                        remark: inputs[5].value,
+                        subCategory: inputs[3].value,
+                        exitDate: inputs[4].value,
+                        pl: inputs[5].value,
+                        remark: inputs[6].value,
                         lastEdited: tr.dataset.lastEdited || null,
                         lastEditedMsg: tr.dataset.lastEditedMsg || null
                     });
@@ -1801,7 +2400,10 @@ window.initPnLApp = function () {
 
         // 1. PUSH (Save) using Hidden Form to bypass CORS from file://
         function syncToGoogleSheets(rowsData) {
-            if (!settingsGASUrl) return;
+            if (!settingsGASUrl) {
+                console.warn("Sync failed: No GAS URL set.");
+                return;
+            }
 
             // Visual feedback
             const btnSave = document.getElementById('btn-save-settings');
@@ -1847,10 +2449,10 @@ window.initPnLApp = function () {
             form.action = settingsGASUrl;
             form.submit();
 
-            // Assumption of success
+            // Assumption of sent (cannot verify success due to Iframe POST + CORS)
             setTimeout(() => {
                 if (btnSave) btnSave.textContent = 'Save & Sync';
-                statusEl.textContent = 'Last Sync: ' + new Date().toLocaleTimeString();
+                statusEl.textContent = 'Last Data Sent: ' + new Date().toLocaleTimeString();
             }, 1500);
         }
 
@@ -1946,6 +2548,29 @@ window.initPnLApp = function () {
             }
         }
 
+        function addItemIfNewSubCat(typeKey, newItem) {
+            if (!typeKey) return;
+            const trimmed = newItem ? newItem.trim() : '';
+            if (trimmed) {
+                if (!appData.subCategories[typeKey]) appData.subCategories[typeKey] = [];
+                const list = appData.subCategories[typeKey];
+                const exists = list.some(item => item.toLowerCase() === trimmed.toLowerCase());
+                if (!exists) {
+                    list.push(trimmed);
+                    list.sort((a, b) => a.localeCompare(b));
+                    localStorage.setItem('pnl_sub_categories', JSON.stringify(appData.subCategories));
+                }
+            }
+        }
+
+        function openManageSubCats(typeKey) {
+            managingSourceKey = 'subCategories';
+            managingTypeKey = typeKey; // Need to track which type we are managing
+            manageModalTitle.textContent = `Manage Sub Categories for ${typeKey}`;
+            renderManageList();
+            manageModal.classList.remove('hidden');
+        }
+
         // --- Dropdown Logic ---
         function createGlobalDropdown() {
             // Create a wrapper to ensure theme CSS applies to the dropdown
@@ -2020,7 +2645,23 @@ window.initPnLApp = function () {
         function updateDropdownContent(filterText) {
             globalDropdown.innerHTML = '';
 
-            const list = appData[activeSourceKey] || [];
+            let list = [];
+            let isDependent = false;
+
+            if (activeSourceKey === 'subCategories') {
+                isDependent = true;
+                // Gather ALL sub-categories from all types into a single global list
+                const allSubCats = new Set();
+                for (const type in appData.subCategories) {
+                    if (Array.isArray(appData.subCategories[type])) {
+                        appData.subCategories[type].forEach(subCat => allSubCats.add(subCat));
+                    }
+                }
+                list = Array.from(allSubCats);
+            } else {
+                list = appData[activeSourceKey] || [];
+            }
+
             const filtered = list
                 .filter(i => i.toLowerCase().includes(filterText.toLowerCase()))
                 .sort((a, b) => a.localeCompare(b));
@@ -2039,9 +2680,17 @@ window.initPnLApp = function () {
                     e.preventDefault();
                     if (activeInput) {
                         activeInput.value = item;
-                        addItemIfNew(activeSourceKey, item);
+                        if (!isDependent) {
+                            addItemIfNew(activeSourceKey, item);
+                        } else {
+                            // Logic to add new sub-category if we allow on-the-fly adding?
+                            // For now, let's allow adding via the modal primarily, or maybe implicit add?
+                            // Let's assume on-the-fly add is allowed.
+                            const tr = activeInput.closest('tr');
+                            const typeVal = tr.querySelectorAll('input')[2].value.trim();
+                            addItemIfNewSubCat(typeVal, item);
+                        }
                         hideDropdown();
-                        // Optional: auto-advance
                     }
                 });
 
@@ -2054,7 +2703,8 @@ window.initPnLApp = function () {
 
             const editBtn = document.createElement('button');
             editBtn.className = 'btn-edit-list';
-            editBtn.title = `Manage ${activeSourceKey}`;
+            const displayKeyName = activeSourceKey === 'subCategories' ? 'Sub Categories' : (activeSourceKey === 'owners' ? 'Owners' : 'Types');
+            editBtn.title = `Manage ${displayKeyName}`;
             editBtn.innerHTML = `
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 20h9"></path>
@@ -2065,14 +2715,109 @@ window.initPnLApp = function () {
             editBtn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 hideDropdown();
-                openModal(activeSourceKey);
+                if (isDependent) {
+                    const tr = activeInput.closest('tr');
+                    const typeVal = tr ? tr.querySelectorAll('input')[2].value.trim() : '';
+                    if (typeVal) openManageSubCats(typeVal);
+                    else alert("Please select a Type first.");
+                } else {
+                    openModal(activeSourceKey);
+                }
             });
 
             footer.appendChild(editBtn);
             globalDropdown.appendChild(footer);
         }
 
+        // --- CSV Import Logic ---
+        function handleCSVImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                if (lines.length < 2) {
+                    alert('CSV file is empty or missing data.');
+                    return;
+                }
+
+                // Header mapping: Transaction,Instrument,Qty,Entry,Entry Price,Entry Time,Exit,Exit Price,Exit Time,Profit,Min Profit,Max Profit
+                const header = lines[0].split(',').map(h => h.trim());
+                const instrumentIdx = header.indexOf('Instrument');
+                const entryTimeIdx = header.indexOf('Entry Time');
+                const exitTimeIdx = header.indexOf('Exit Time');
+                const profitIdx = header.indexOf('Profit');
+
+                if (instrumentIdx === -1 || entryTimeIdx === -1 || exitTimeIdx === -1 || profitIdx === -1) {
+                    alert('Invalid CSV format. Required columns: Instrument, Entry Time, Exit Time, Profit');
+                    return;
+                }
+
+                let importedCount = 0;
+                for (let i = 1; i < lines.length; i++) {
+                    const row = lines[i].split(',').map(r => r.trim());
+                    if (row.length < header.length) continue;
+
+                    const instrument = row[instrumentIdx];
+                    const entryTimeStr = row[entryTimeIdx];
+                    const exitTimeStr = row[exitTimeIdx];
+                    const profit = parseFloat(row[profitIdx]);
+
+                    if (isNaN(profit)) continue;
+
+                    // Parse Dates (e.g., 2025-02-14 01:25 PM)
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return '';
+                        // Simple split to get YYYY-MM-DD
+                        const parts = dateStr.split(' ');
+                        return parts[0]; // Returns "2025-02-14"
+                    };
+
+                    const entryDate = parseDate(entryTimeStr);
+                    const exitDate = parseDate(exitTimeStr);
+
+                    // Derive Type and Sub Category
+                    let type = 'Stocks';
+                    let subCategory = '';
+
+                    const instUpper = instrument.toUpperCase();
+                    if (instUpper.includes('NIFTY') || instUpper.includes('BANKNIFTY') || instUpper.includes('FINNIFTY') || instUpper.includes('MIDCPNIFTY')) {
+                        type = 'Options';
+
+                        if (instUpper.includes('BANKNIFTY')) subCategory = 'BANKNIFTY';
+                        else if (instUpper.includes('FINNIFTY')) subCategory = 'FINNIFTY';
+                        else if (instUpper.includes('MIDCPNIFTY')) subCategory = 'MIDCPNIFTY';
+                        else if (instUpper.includes('NIFTY')) subCategory = 'NIFTY';
+                    }
+
+                    // Create Data Object
+                    const tradeData = {
+                        date: entryDate,
+                        owner: appData.owners[0] || 'Owner 1',
+                        type: type,
+                        subCategory: subCategory,
+                        exitDate: exitDate,
+                        pl: profit,
+                        remark: instrument
+                    };
+
+                    addRow(tradeData);
+                    importedCount++;
+                }
+
+                saveTableRows();
+                updateDashboard();
+                alert(`Successfully imported ${importedCount} trades.`);
+                // Clear input
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
         // --- Table & Cell Logic ---
+
         function addRow(data = null) {
             const tr = document.createElement('tr');
 
@@ -2104,6 +2849,10 @@ window.initPnLApp = function () {
             // Type (Smart Input)
             const typeTd = createSmartCell('types', 'Type', data ? data.type : '');
             tr.appendChild(typeTd);
+
+            // Sub Category (Smart Input - Dependent)
+            const subCatTd = createSmartCell('subCategories', 'Sub Cat', data ? data.subCategory : '');
+            tr.appendChild(subCatTd);
 
             // Exit Date
             const exitDateTd = createCell('date');
@@ -2267,8 +3016,8 @@ window.initPnLApp = function () {
                     // If the row is visible, add to running total
                     if (tr.style.display !== 'none') {
                         const inputs = tr.querySelectorAll('input');
-                        if (inputs.length >= 5) {
-                            const plVal = parseFloat(inputs[4].value) || 0;
+                        if (inputs.length >= 6) {
+                            const plVal = parseFloat(inputs[5].value) || 0;
                             runningTotal += plVal;
 
                             cumCell.textContent = runningTotal.toFixed(2);
@@ -2294,8 +3043,8 @@ window.initPnLApp = function () {
             rows.forEach(tr => {
                 if (tr.style.display !== 'none') {
                     const inputs = tr.querySelectorAll('input');
-                    if (inputs.length >= 5) {
-                        const plVal = parseFloat(inputs[4].value) || 0;
+                    if (inputs.length >= 6) {
+                        const plVal = parseFloat(inputs[5].value) || 0;
                         visibleTotalPL += plVal;
                     }
                 }
@@ -2367,7 +3116,18 @@ window.initPnLApp = function () {
                     val.length > 0 &&
                     input.selectionStart === val.length) {
 
-                    const list = appData[sourceKey] || [];
+                    let list = [];
+                    if (sourceKey === 'subCategories') {
+                        const allSubCats = new Set();
+                        for (const type in appData.subCategories) {
+                            if (Array.isArray(appData.subCategories[type])) {
+                                appData.subCategories[type].forEach(subCat => allSubCats.add(subCat));
+                            }
+                        }
+                        list = Array.from(allSubCats);
+                    } else {
+                        list = appData[sourceKey] || [];
+                    }
                     const match = list.find(item => item.toLowerCase().startsWith(val.toLowerCase()));
 
                     // Only autocomplete if we found a match AND it adds characters
@@ -2392,11 +3152,19 @@ window.initPnLApp = function () {
                             input.style.color = getColorForString(input.value);
                         }
                     }
-                    if (input.value) addItemIfNew(sourceKey, input.value);
-                    hideDropdown();
-
-                    // Move focus
+                    // Move focus BEFORE replacing/adding
                     const nextInput = td.nextElementSibling ? td.nextElementSibling.querySelector('input, select') : null;
+
+                    if (input.value) {
+                        if (sourceKey !== 'subCategories') {
+                            addItemIfNew(sourceKey, input.value);
+                        } else {
+                            const tr = input.closest('tr');
+                            const typeVal = tr ? tr.querySelectorAll('input')[2].value.trim() : '';
+                            if (typeVal) addItemIfNewSubCat(typeVal, input.value);
+                        }
+                    }
+                    hideDropdown();
                     if (nextInput) nextInput.focus();
                 }
             });
@@ -2404,7 +3172,15 @@ window.initPnLApp = function () {
             input.addEventListener('blur', () => {
                 hideTimeout = setTimeout(() => {
                     hideDropdown();
-                    if (input.value) addItemIfNew(sourceKey, input.value);
+                    if (input.value) {
+                        if (sourceKey !== 'subCategories') {
+                            addItemIfNew(sourceKey, input.value);
+                        } else {
+                            const tr = input.closest('tr');
+                            const typeVal = tr ? tr.querySelectorAll('input')[2].value.trim() : '';
+                            if (typeVal) addItemIfNewSubCat(typeVal, input.value);
+                        }
+                    }
                 }, 100);
             });
 
@@ -2447,8 +3223,8 @@ window.initPnLApp = function () {
                     // 1. Minimize Past Months Filter
                     if (shouldMinimize) {
                         const entryDateInput = cells[1]?.querySelector('input');
-                        const exitDateInput = cells[4]?.querySelector('input');
-                        const plInput = cells[5]?.querySelector('input'); // Index 5 is P/L
+                        const exitDateInput = cells[5]?.querySelector('input'); // Index 5 is Exit Date
+                        const plInput = cells[6]?.querySelector('input'); // Index 6 is P/L
 
                         const entryDate = entryDateInput ? parseRobustDate(entryDateInput.value) : null;
                         const exitDate = exitDateInput ? parseRobustDate(exitDateInput.value) : null;
@@ -2478,8 +3254,8 @@ window.initPnLApp = function () {
                             const cell = cells[colIndex];
                             if (!cell) continue;
 
-                            // Special handling for Cumulative (Col 6) which is textContent, not input
-                            if (parseInt(colIndex) === 6) {
+                            // Special handling for Cumulative (Col 7) which is textContent, not input
+                            if (parseInt(colIndex) === 7) {
                                 const text = cell.textContent.trim().toLowerCase();
                                 if (!text.includes(filterValue)) {
                                     isVisible = false;
@@ -2489,6 +3265,25 @@ window.initPnLApp = function () {
                             }
 
                             const cellValue = getCellValue(cell).toLowerCase();
+
+                            // Special handling for Date Columns (index 1 and 5)
+                            const cIdx = parseInt(colIndex);
+                            if (cIdx === 1 || cIdx === 5) {
+                                const dateObj = parseRobustDate(cellValue);
+                                if (dateObj) {
+                                    const d = String(dateObj.getDate()).padStart(2, '0');
+                                    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                                    const y = dateObj.getFullYear();
+                                    const displayFormat = `${d}-${m}-${y}`;
+                                    const displayFormatShort = `${d}-${m}`;
+                                    // Match against either raw value (YYYY-MM-DD) or display format (DD-MM-YYYY / DD-MM)
+                                    if (!cellValue.includes(filterValue) && !displayFormat.includes(filterValue) && !displayFormatShort.includes(filterValue)) {
+                                        isVisible = false;
+                                        break;
+                                    }
+                                    continue;
+                                }
+                            }
 
                             // Simple includes matching
                             if (!cellValue.includes(filterValue)) {
@@ -2613,8 +3408,8 @@ window.initPnLApp = function () {
         }
 
         function compareValues(a, b, colIndex, dir) {
-            // Date Columns (index 1 & 4 usually)
-            if (colIndex === 1 || colIndex === 4) {
+            // Date Columns (index 1 & 5 usually)
+            if (colIndex === 1 || colIndex === 5) {
                 const dateA = parseRobustDate(a);
                 const dateB = parseRobustDate(b);
                 const timeA = dateA ? dateA.getTime() : -1;
@@ -2622,11 +3417,11 @@ window.initPnLApp = function () {
                 return dir === 'asc' ? timeA - timeB : timeB - timeA;
             }
 
-            // Number Columns (P/L is index 5)
+            // Number Columns (P/L is index 6)
             const numA = parseFloat(a);
             const numB = parseFloat(b);
 
-            if (!isNaN(numA) && !isNaN(numB) && colIndex === 5) {
+            if (!isNaN(numA) && !isNaN(numB) && colIndex === 6) {
                 return dir === 'asc' ? numA - numB : numB - numA;
             }
 
@@ -2658,7 +3453,11 @@ window.initPnLApp = function () {
         function handleModalAdd() {
             const val = modalAddInput.value;
             if (val && managingSourceKey) {
-                addItemIfNew(managingSourceKey, val);
+                if (managingSourceKey === 'subCategories') {
+                    addItemIfNewSubCat(managingTypeKey, val);
+                } else {
+                    addItemIfNew(managingSourceKey, val);
+                }
                 modalAddInput.value = '';
                 // Refresh list
                 if (typeof renderManageList === 'function') {
@@ -2817,9 +3616,10 @@ window.initPnLApp = function () {
                 date: inputs[0].value,
                 owner: inputs[1].value,
                 type: inputs[2].value,
-                exitDate: inputs[3].value,
-                pl: inputs[4].value,
-                remark: inputs[5].value,
+                subCategory: inputs[3].value,
+                exitDate: inputs[4].value,
+                pl: inputs[5].value,
+                remark: inputs[6].value,
                 deletedAt: new Date().toISOString()
             };
 
@@ -2944,9 +3744,10 @@ window.initPnLApp = function () {
                 if (index === 1) colName = 'Date';
                 else if (index === 2) colName = 'Owner';
                 else if (index === 3) colName = 'Type';
-                else if (index === 4) colName = 'Exit';
-                else if (index === 5) colName = 'P/L';
-                else if (index === 7) colName = 'Rem.';
+                else if (index === 4) colName = 'Sub Cat.';
+                else if (index === 5) colName = 'Exit';
+                else if (index === 6) colName = 'P/L';
+                else if (index === 8) colName = 'Rem.';
             }
 
             const msg = colName ? `${colName}: ${timeStr}` : `Edited: ${timeStr}`;
@@ -2985,7 +3786,7 @@ window.initPnLApp = function () {
         const detailsModal = document.getElementById('details-modal');
         const detailsModalTitle = document.getElementById('details-modal-title');
         const closeDetailsModal = document.getElementById('close-details-modal');
-        const detailsTableBody = document.getElementById('details-table-body');
+        const detailsDataContainer = document.getElementById('details-data-container');
 
         if (closeDetailsModal) {
             closeDetailsModal.addEventListener('click', () => {
@@ -2999,11 +3800,10 @@ window.initPnLApp = function () {
         }
 
         function showDrillDown(filterType, filterValue, monthKey = null) {
-            if (!detailsModal) return;
+            if (!detailsModal || !detailsDataContainer) return;
 
             let title = `${filterType}: ${filterValue} - Trades`;
             if (monthKey) {
-                // Human readable month (e.g. Feb 2026)
                 const [y, m] = monthKey.split('-');
                 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                 const monthName = monthNames[parseInt(m) - 1] || m;
@@ -3011,34 +3811,35 @@ window.initPnLApp = function () {
             }
 
             if (detailsModalTitle) detailsModalTitle.textContent = title;
-            if (detailsTableBody) detailsTableBody.innerHTML = '';
+            detailsDataContainer.innerHTML = ''; // Clear container
 
             const trs = document.getElementById('table-body').querySelectorAll('tr');
             let count = 0;
             const tradesForChart = [];
+            const matchingTrades = [];
+            const summaryData = {};
+            const isSummaryView = filterType === 'Type' || filterType === 'Owner|Type';
 
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length < 5) return;
+                if (inputs.length < 6) return;
 
                 const dateVal = inputs[0].value || '--';
                 const ownerVal = inputs[1].value.trim();
                 const typeVal = inputs[2].value.trim();
-                const exitVal = inputs[3].value || '--';
-                const plVal = parseFloat(inputs[4].value);
+                const subCatVal = inputs[3].value.trim();
+                const exitVal = inputs[4].value || '--';
+                const plVal = parseFloat(inputs[5].value);
 
                 let match = false;
 
-                // Secondary Filter: If monthKey is provided, trade must be in that month
                 if (monthKey) {
-                    if (exitVal === '--') return; // Skip open trades when scoped to a month
+                    if (exitVal === '--') return;
                     const dateObj = parseRobustDate(exitVal);
                     if (dateObj) {
                         const trMonthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-                        if (trMonthKey !== monthKey) return; // Skip if month doesn't match
-                    } else {
-                        return; // Skip if date is invalid but required
-                    }
+                        if (trMonthKey !== monthKey) return;
+                    } else return;
                 }
 
                 if (filterType === 'Owner' && ownerVal === filterValue) match = true;
@@ -3055,47 +3856,115 @@ window.initPnLApp = function () {
                         if (mKey === filterValue) match = true;
                     }
                 }
+                if (filterType === 'SubCategory' && subCatVal === filterValue) match = true;
 
                 if (match) {
+                    const pl = isNaN(plVal) ? 0 : plVal;
                     const rowValue = {
                         date: dateVal,
                         owner: ownerVal,
                         type: typeVal,
+                        subCategory: subCatVal,
                         exitDate: exitVal,
-                        pl: isNaN(plVal) ? 0 : plVal
+                        pl: pl
                     };
                     tradesForChart.push(rowValue);
+                    matchingTrades.push(rowValue);
 
-                    const row = document.createElement('tr');
-                    const plClass = !isNaN(plVal) ? (plVal >= 0 ? 'positive' : 'negative') : '';
-                    const plDisplay = !isNaN(plVal) ? plVal.toFixed(2) : '0.00';
-
-                    row.innerHTML = `
-                    <td style="padding: 10px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);">${dateVal}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid var(--border-color); color: ${getColorForString(ownerVal)}; font-weight: 500;">${ownerVal}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);">${typeVal}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);">${exitVal}</td>
-                    <td style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace;" class="${plClass}">${plDisplay}</td>
-                 `;
-                    if (detailsTableBody) detailsTableBody.appendChild(row);
+                    if (isSummaryView) {
+                        const sKey = subCatVal || '--';
+                        if (!summaryData[sKey]) summaryData[sKey] = { pl: 0, count: 0 };
+                        summaryData[sKey].pl += pl;
+                        summaryData[sKey].count++;
+                    }
                     count++;
                 }
             });
 
-            // Render Performance Chart and Metrics if trades exist
-            const chartContainer = document.getElementById('details-chart-container');
-            const metricsGrid = document.getElementById('details-metrics-grid');
             if (count > 0) {
+                // 1. If Summary View, show Summary Table
+                if (isSummaryView) {
+                    const summaryHeading = document.createElement('h4');
+                    summaryHeading.textContent = 'Sub-Category Summary';
+                    summaryHeading.style.cssText = 'margin: 20px 0 10px 0; color: var(--accent-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;';
+                    detailsDataContainer.appendChild(summaryHeading);
+
+                    const summaryTable = document.createElement('table');
+                    summaryTable.style.cssText = 'width: 100%; border-collapse: collapse; margin-bottom: 25px;';
+                    summaryTable.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Rank</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Sub Category</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Total P/L</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Trades</th>
+                            </tr>
+                        </thead>
+                        <tbody id="details-summary-body"></tbody>
+                    `;
+                    detailsDataContainer.appendChild(summaryTable);
+                    const summaryBody = summaryTable.querySelector('#details-summary-body');
+                    const sortedSummary = Object.entries(summaryData).sort((a, b) => b[1].pl - a[1].pl);
+                    sortedSummary.forEach(([name, data], i) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${i + 1}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color); font-weight: 500;">${name}</td>
+                            <td style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace;" class="${data.pl >= 0 ? 'positive' : 'negative'}">${data.pl.toFixed(2)}</td>
+                            <td style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">${data.count}</td>
+                        `;
+                        summaryBody.appendChild(tr);
+                    });
+                }
+
+                // 2. Show Detailed Trade Log (Always now)
+                const detailHeading = document.createElement('h4');
+                detailHeading.textContent = isSummaryView ? 'Individual Trade Log' : 'Trade Details';
+                detailHeading.style.cssText = 'margin: 20px 0 10px 0; color: var(--accent-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;';
+                detailsDataContainer.appendChild(detailHeading);
+
+                const detailTable = document.createElement('table');
+                detailTable.style.cssText = 'width: 100%; border-collapse: collapse;';
+                detailTable.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Date</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Owner</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Type</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Sub Category</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Exit Date</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">P/L</th>
+                        </tr>
+                    </thead>
+                    <tbody id="details-individual-body"></tbody>
+                `;
+                detailsDataContainer.appendChild(detailTable);
+                const individualBody = detailTable.querySelector('#details-individual-body');
+                matchingTrades.forEach(t => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${t.date}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--border-color); color: ${getColorForString(t.owner)}; font-weight: 500;">${t.owner}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${t.type}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem;">${t.subCategory || '--'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${t.exitDate}</td>
+                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace;" class="${t.pl >= 0 ? 'positive' : 'negative'}">${t.pl.toFixed(2)}</td>
+                    `;
+                    individualBody.appendChild(tr);
+                });
+
+                // Update Performance Chart and Metrics
+                const chartContainer = document.getElementById('details-chart-container');
+                const metricsGrid = document.getElementById('details-metrics-grid');
                 if (chartContainer) chartContainer.style.display = 'block';
                 if (metricsGrid) metricsGrid.style.display = 'grid';
                 renderDrillDownChart(tradesForChart);
             } else {
+                detailsDataContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No trades found</div>`;
+                const chartContainer = document.getElementById('details-chart-container');
+                const metricsGrid = document.getElementById('details-metrics-grid');
                 if (chartContainer) chartContainer.style.display = 'none';
                 if (metricsGrid) metricsGrid.style.display = 'none';
-            }
-
-            if (count === 0 && detailsTableBody) {
-                detailsTableBody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-secondary);">No trades found</td></tr>';
             }
 
             detailsModal.classList.remove('hidden');
@@ -3152,7 +4021,11 @@ window.initPnLApp = function () {
                 elPl.textContent = '₹' + cumulative.toLocaleString('en-IN', { minimumFractionDigits: 2 });
                 elPl.className = cumulative >= 0 ? 'positive' : 'negative';
             }
-            if (elMdd) elMdd.textContent = '₹' + maxDD.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (elMdd) {
+                const ddPercent = peak > 0 ? ((maxDD / peak) * 100).toFixed(1) : '0.0';
+                elMdd.innerHTML = '₹' + maxDD.toLocaleString('en-IN', { minimumFractionDigits: 2 }) +
+                    `<span style="font-size: 0.7em; opacity: 0.8; margin-left: 5px;">(-${ddPercent}%)</span>`;
+            }
             if (elWin) elWin.textContent = winRate.toFixed(1) + '%';
             if (elPf) elPf.textContent = pf.toFixed(2);
 
@@ -3235,9 +4108,9 @@ window.initPnLApp = function () {
             // 1. Aggregate P/L by Day (YYYY-MM-DD)
             trs.forEach(tr => {
                 const inputs = tr.querySelectorAll('input');
-                if (inputs.length >= 5) {
-                    const exitDateStr = inputs[3].value;
-                    const pl = parseFloat(inputs[4].value) || 0;
+                if (inputs.length >= 6) {
+                    const exitDateStr = inputs[4].value;
+                    const pl = parseFloat(inputs[5].value) || 0;
                     if (exitDateStr) {
                         const dateObj = parseRobustDate(exitDateStr);
                         if (dateObj) {
@@ -3407,109 +4280,7 @@ window.initPnLApp = function () {
             }
         }
 
-        // --- OTM Analysis Logic ---
-        window.generateOTMReport = function () {
-            const timeframe = document.getElementById('otmTimeframe').value;
-            const level = document.getElementById('otmLevel').value;
-            const capital = parseFloat(document.getElementById('otmAmount').value) || 10500;
 
-            const resultsContainer = document.getElementById('otm-results-container');
-            const noDataMessage = document.getElementById('otm-no-data');
-            const tableBody = document.getElementById('otm-details-body');
-
-            // Find all trades from the main table
-            const trs = document.getElementById('table-body').querySelectorAll('tr');
-            const filteredTrades = [];
-
-            trs.forEach(tr => {
-                const inputs = tr.querySelectorAll('input');
-                if (inputs.length < 5) return;
-
-                const tradeNum = tr.querySelector('.col-rank')?.textContent || '-';
-                const dateVal = inputs[0].value;
-                const typeVal = inputs[1].value; // In the P&L app, this is 'Owner', but we might need to adapt
-                const signalVal = inputs[2].value;
-                const exitDate = inputs[3].value;
-                const plVal = parseFloat(inputs[4].value) || 0;
-
-                // Here we apply "jugaad" filtering. 
-                // If the user's data doesn't have OTM/Timeframe columns, we assume 
-                // the currently uploaded data MATCHES the selected filters.
-                // In a more advanced version, we would check for hidden columns or specific metadata.
-
-                // For now, let's treat ALL trades as potentially relevant if they have a P/L.
-                if (!isNaN(plVal)) {
-                    filteredTrades.push({
-                        id: tradeNum,
-                        date: exitDate || dateVal,
-                        type: typeVal,
-                        signal: signalVal,
-                        pl: plVal
-                    });
-                }
-            });
-
-            if (filteredTrades.length === 0) {
-                resultsContainer.style.display = 'none';
-                noDataMessage.style.display = 'block';
-                return;
-            }
-
-            resultsContainer.style.display = 'block';
-            noDataMessage.style.display = 'none';
-            tableBody.innerHTML = '';
-
-            let netProfit = 0;
-            let wins = 0;
-            let losses = 0;
-            let maxDD = 0;
-            let peak = 0;
-            let cumulative = 0;
-
-            filteredTrades.forEach((t, i) => {
-                netProfit += t.pl;
-                cumulative += t.pl;
-
-                if (t.pl > 0) wins++;
-                else if (t.pl < 0) losses++;
-
-                if (cumulative > peak) peak = cumulative;
-                const dd = peak - cumulative;
-                if (dd > maxDD) maxDD = dd;
-
-                const plPercent = (t.pl / capital) * 100;
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${t.id}</td>
-                    <td>${t.date}</td>
-                    <td>${t.type}</td>
-                    <td>${t.signal}</td>
-                    <td style="text-align: right;">-</td>
-                    <td style="text-align: right;" class="${t.pl >= 0 ? 'text-green' : 'text-red'}">${t.pl.toFixed(2)}</td>
-                    <td style="text-align: right;" class="${t.pl >= 0 ? 'text-green' : 'text-red'}">${plPercent.toFixed(2)}%</td>
-                    <td style="text-align: right;">₹${(capital + cumulative).toFixed(2)}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            const roi = (netProfit / capital) * 100;
-            const winRate = filteredTrades.length > 0 ? (wins / (wins + losses) * 100) : 0;
-            const avgTrade = netProfit / (filteredTrades.length || 1);
-
-            document.getElementById('otmNetProfit').textContent = `₹${netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-            document.getElementById('otmROI').textContent = `${roi.toFixed(2)}%`;
-            document.getElementById('otmROI').className = roi >= 0 ? 'text-green' : 'text-red';
-
-            document.getElementById('otmWinRate').textContent = `${winRate.toFixed(2)}%`;
-            document.getElementById('otmWLCounts').textContent = `${wins}W / ${losses}L`;
-
-            document.getElementById('otmAvgTrade').textContent = `₹${avgTrade.toFixed(2)}`;
-            document.getElementById('otmExpectancy').textContent = `₹${(avgTrade / capital * 100).toFixed(2)}%`;
-
-            document.getElementById('otmMaxDD').textContent = `₹${maxDD.toFixed(2)}`;
-            document.getElementById('otmMaxDDPercent').textContent = `${(maxDD / capital * 100).toFixed(2)}%`;
-        };
 
         // --- Final Execution ---
         try {

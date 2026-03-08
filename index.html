@@ -251,6 +251,48 @@
             color: var(--error-color);
         }
 
+        /* Dual Metric Row Enhancements */
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.6;
+        }
+
+        .metric-value-container {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .metric-main-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .metric-sub-val {
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        .text-red-muted {
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
         .primary-btn {
             background: var(--success-color);
             color: #000;
@@ -477,6 +519,231 @@
         .spin-btn.down {
             border-radius: 0 0 2px 2px;
         }
+
+        /* ---- Institutional Info Icon Tooltip ---- */
+        .inst-info-icon {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 18px;
+            height: 18px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #a5b4fc;
+            z-index: 10;
+            transition: all 0.2s;
+            font-style: normal;
+        }
+
+        .inst-info-icon:hover {
+            background: rgba(99, 102, 241, 0.5);
+            color: #fff;
+        }
+
+        .inst-info-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            right: -8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 11px;
+            line-height: 1.6;
+            width: 300px;
+            white-space: pre-wrap;
+            border: 1px solid #334155;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 9999;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        .inst-info-icon:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ---- PDF Print Styles ---- */
+        #pdf-report-view {
+            display: none;
+        }
+
+        @media print {
+
+            body>.container>header,
+            body>.container>nav,
+            body>.container>#activeFilesPanel,
+            .tab-content:not(#tab-dashboard),
+            #tab-dashboard #utilities,
+            #tab-dashboard .tab-content {
+                display: none !important;
+            }
+
+            body {
+                background: #fff !important;
+                color: #1e293b !important;
+                padding: 0 !important;
+            }
+
+            .container {
+                padding: 0 !important;
+            }
+
+            #pdf-report-view {
+                display: block !important;
+            }
+
+            #tab-dashboard {
+                display: none !important;
+            }
+
+            .tab-content {
+                display: none !important;
+            }
+
+            .pdf-page {
+                page-break-after: avoid;
+            }
+        }
+
+        /* ---- Strategy Drill-down Modal ---- */
+        .strategy-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 999999;
+            /* Increased z-index to ensure it sits above all other relative elements */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .strategy-modal-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .strategy-modal {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .strategy-modal-backdrop.open .strategy-modal {
+            transform: scale(1);
+        }
+
+        .strategy-modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .strategy-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .strategy-modal-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .strategy-modal-close:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .strategy-modal-body {
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .strategy-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .strategy-table th {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            color: #8b5cf6;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 14px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+            font-size: 11px;
+        }
+
+        .strategy-table th:first-child {
+            text-align: left;
+        }
+
+        .strategy-table td {
+            padding: 14px 16px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-weight: 500;
+        }
+
+        .strategy-table td:first-child {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .strategy-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
     </style>
     <link rel="stylesheet" href="pnl_style.css">
 </head>
@@ -501,6 +768,16 @@
                 <input type="file" id="mergeFileInput" multiple style="display:none" accept=".csv, .xlsx, .xls, .json">
                 <button id="exportBtn" onclick="exportPortfolio()" class="primary-btn"
                     style="display: none; background: #334155; color: #f8fafc;">Export JSON</button>
+                <button onclick="exportToPDF()" class="primary-btn"
+                    style="display:flex; align-items:center; gap:8px; background: linear-gradient(135deg,#6366f1,#8b5cf6); border:none;"
+                    id="btn-export-pdf">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    Export PDF
+                </button>
             </div>
         </header>
 
@@ -543,8 +820,9 @@
             <button class="tab-btn" onclick="switchTab('charts')">Analysis</button>
             <button class="tab-btn" onclick="switchTab('streaks')">Streak Analysis</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
-            <button class="tab-btn" onclick="switchTab('otm-analysis')">OTM Analysis</button>
+
             <button class="tab-btn" onclick="switchTab('correlation')">Correlation</button>
+            <button class="tab-btn" onclick="switchTab('efficiency')">Efficiency</button>
             <a href="correlation_analyzer.html" target="_blank" class="tab-btn"
                 style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--accent-color); border: 1px dashed var(--accent-color);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
@@ -708,6 +986,311 @@
                 </div>
             </div>
 
+            <!-- ===== INSTITUTIONAL METRICS SECTION ===== -->
+            <div
+                style="margin-top: 20px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                <!-- Capital Input Row -->
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+                    <div
+                        style="font-size:0.8em; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); font-weight:700;">
+                        Capital Framework</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <label style="font-size:0.9em; color:var(--text-secondary);">Deployed Capital (₹):</label>
+                        <input type="number" id="deployedCapitalInput" placeholder="e.g. 1000000"
+                            style="background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:6px; outline:none; width:160px; font-size:0.9em;"
+                            oninput="saveCapitalAndRefresh()">
+                    </div>
+                    <div style="font-size:0.8em; color:#94a3b8;">💡 Enter your total deployed capital to unlock Return
+                        %, CAGR, Sharpe, and Calmar ratios.</div>
+                </div>
+
+                <!-- Row 1: Capital & Returns -->
+                <div
+                    style="font-size:0.75em; text-transform:uppercase; letter-spacing:0.05em; color:var(--accent-color); font-weight:700; margin-bottom:12px;">
+                    Returns &amp; Capital Metrics</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:24px;"
+                    id="capital-metrics-row">
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon" data-tooltip="CAPITAL DEPLOYED
+
+The total amount of money you have committed to trading.
+
+Formula: User-entered capital (above)
+
+Example: If you trade Nifty with ₹10L margin, enter ₹10,00,000
+
+Why it matters: All return metrics are meaningless without knowing the capital base.">ℹ</span>
+                        <div class="stats-card-title">Capital Deployed</div>
+                        <div class="stats-card-value" id="capitalDeployedDisplay" style="color:var(--accent-color);">--
+                        </div>
+                        <div class="stats-card-sub">Total invested capital</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon" data-tooltip="TOTAL RETURN %
+
+How much you earned as a percentage of your invested capital.
+
+Formula: Net Profit ÷ Capital × 100
+
+Example: ₹2,50,000 profit on ₹10,00,000 capital = 25% Return
+
+Why it matters: Rupees are relative. % return lets you compare any strategy on any capital.">ℹ</span>
+                        <div class="stats-card-title">Total Return %</div>
+                        <div class="stats-card-value" id="totalReturnPctDisplay">--</div>
+                        <div class="stats-card-sub">Net Profit / Capital</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon"
+                            data-tooltip="CAGR — Compound Annual Growth Rate
+
+The annualized return of your strategy, accounting for compounding over years.
+
+Formula: (End Value / Start Capital) ^ (1 / Years) − 1
+
+Example: ₹10L → ₹12.5L in 1.5 years = CAGR of 16.1%
+
+Why it matters: This is the single most important number for comparing strategies over different time periods. A 40% return in 3 years is very different from 40% in 6 months.">ℹ</span>
+                        <div class="stats-card-title">CAGR</div>
+                        <div class="stats-card-value" id="cagrDisplay">--</div>
+                        <div class="stats-card-sub">Annualized return %</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon" data-tooltip="PROFIT FACTOR
+
+How much you earn for every rupee you lose.
+
+Formula: Gross Profit ÷ Gross Loss
+
+Example: ₹5,00,000 gross wins and ₹2,00,000 gross losses = Profit Factor of 2.5
+
+Why it matters: PF > 1.5 is considered good. PF > 2 is excellent. PF < 1 means you are losing money overall.">ℹ</span>
+                        <div class="stats-card-title">Profit Factor</div>
+                        <div class="stats-card-value" id="profitFactorDisplay">--</div>
+                        <div class="stats-card-sub">Gross Win / Gross Loss</div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Risk-Adjusted Returns -->
+                <div
+                    style="font-size:0.75em; text-transform:uppercase; letter-spacing:0.05em; color:#f59e0b; font-weight:700; margin-bottom:12px;">
+                    Risk-Adjusted Return Ratios</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px;"
+                    id="risk-metrics-row">
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon"
+                            data-tooltip="SHARPE RATIO
+
+How much return you earn for each unit of TOTAL risk (volatility).
+
+Formula: (Strategy Annual Return − 6.5%) ÷ Std Dev of Daily P&amp;L × √252
+
+Example: Your strategy returns 22% p.a., Std Dev = 8% → Sharpe = (22−6.5)/8 = 1.94
+
+Benchmarks: &lt; 1 = Poor | 1–2 = Good | &gt; 2 = Excellent
+
+Why it matters: A strategy with 20% return and Sharpe 0.5 is far riskier than one with 12% return and Sharpe 1.8. HNI clients always look at this first.">ℹ</span>
+                        <div class="stats-card-title">Sharpe Ratio</div>
+                        <div class="stats-card-value" id="sharpeDisplay">--</div>
+                        <div class="stats-card-sub" id="sharpeLabel">Needs capital input</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon"
+                            data-tooltip="SORTINO RATIO
+
+Like Sharpe, but only DOWNSIDE volatility is penalized — not good volatility.
+
+Formula: (Strategy Annual Return − 6.5%) ÷ Downside Std Dev × √252
+
+Example: Same strategy as above, but downside Std Dev = 4% → Sortino = (22−6.5)/4 = 3.88
+
+Benchmarks: &gt; 2 = Very Good | &gt; 3 = Excellent
+
+Why it matters: More relevant than Sharpe for trading strategies. Big up-days should NOT be penalized. A high Sortino means 'I make money volatilely, but I don't LOSE money volatilely'.">ℹ</span>
+                        <div class="stats-card-title">Sortino Ratio</div>
+                        <div class="stats-card-value" id="sortinoDisplay">--</div>
+                        <div class="stats-card-sub" id="sortinoLabel">Needs capital input</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon"
+                            data-tooltip="CALMAR RATIO
+
+How much annual return you generate per unit of maximum drawdown.
+
+Formula: CAGR % ÷ Max Drawdown %
+
+Example: CAGR = 18%, Max DD = 6% → Calmar = 3.0
+
+Benchmarks: &gt; 0.5 = Acceptable | &gt; 1 = Good | &gt; 3 = Excellent
+
+Why it matters: This is the standard fund manager metric. A Calmar of 1 means for every 1% of drawdown risk, you earn 1% annual return. The higher the better.">ℹ</span>
+                        <div class="stats-card-title">Calmar Ratio</div>
+                        <div class="stats-card-value" id="calmarDisplay">--</div>
+                        <div class="stats-card-sub" id="calmarLabel">Needs capital input</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative; cursor:pointer;"
+                        onclick="showStrategyMetricsModal(window.parsedTrades)">
+                        <span class="inst-info-icon"
+                            data-tooltip="STD DEV OF P&amp;L
+
+Measures the day-to-day consistency (volatility) of your P&amp;L.
+
+Formula: √( Σ(daily P&amp;L − avg daily P&amp;L)² / N )
+
+Example: If your average daily P&amp;L is ₹500 and Std Dev is ₹200, most days you earn ₹300–₹700. If Std Dev is ₹5,000 your results are chaotic.
+
+Why it matters: Lower Std Dev = more consistent strategy. Institutional investors prefer predictable monthly returns over large swings, even if total profit is similar.">ℹ</span>
+                        <div class="stats-card-title">Std Dev of P&amp;L</div>
+                        <div class="stats-card-value" id="stdDevDisplay">--</div>
+                        <div class="stats-card-sub">Daily P&amp;L volatility (₹)</div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Consistency, Robustness & Edge Ratios -->
+                <div
+                    style="font-size:0.75em; text-transform:uppercase; letter-spacing:0.05em; color:#10b981; font-weight:700; margin-bottom:12px; margin-top:30px;">
+                    Consistency, Robustness &amp; Edge Metrics</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:24px;"
+                    id="edge-metrics-row">
+
+                    <div class="stats-card" style="position:relative;">
+                        <span class="inst-info-icon"
+                            data-tooltip="EXPECTANCY PER TRADE
+
+The average mathematical value of taking one trade blindly.
+
+Formula: (Win Rate × Avg Win) − (Loss Rate × Avg Loss)
+
+Example: Win Rate 40%, Avg Win ₹100, Avg Loss ₹50 → (0.40 × 100) − (0.60 × 50) = +₹10
+
+Why it matters: As long as this number is positive and accounts for slippage/commissions, the strategy will print money over a large sample size.">ℹ</span>
+                        <div class="stats-card-title">Expectancy per trade</div>
+                        <div class="stats-card-value" id="expectancyDisplay">--</div>
+                        <div class="stats-card-sub" id="expectancyLabel">Avg value of one trade</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative;">
+                        <span class="inst-info-icon"
+                            data-tooltip="PAYOFF RATIO (Avg Win / Avg Loss)
+
+The size of your average winner compared to your average loser.
+
+Formula: Average Winning Trade ÷ Average Losing Trade
+
+Example: Avg Win ₹2,500, Avg Loss ₹1,000 = Payoff Ratio of 2.5
+
+Why it matters: A high payoff ratio (> 2.0) means you can afford a low win rate (e.g. 35%) and still break even or profit.">ℹ</span>
+                        <div class="stats-card-title">Payoff Ratio</div>
+                        <div class="stats-card-value" id="payoffDisplay">--</div>
+                        <div class="stats-card-sub">Avg Win / Avg Loss</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative;">
+                        <span class="inst-info-icon"
+                            data-tooltip="MONTHLY / YEARLY CONSISTENCY
+
+The percentage of months and years that end in profit.
+
+Formula: (Profitable Periods ÷ Total Periods) × 100
+
+Why it matters: Investors prefer a strategy that is profitable 8 out of 10 months rather than one that makes all its money in 2 months and suffers 8 months of stress.">ℹ</span>
+                        <div class="stats-card-title"
+                            style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Consistency (Mo / Yr)
+                        </div>
+                        <div class="stats-card-value" id="consistencyDisplay" style="font-size:1.3em;">-- / --</div>
+                        <div class="stats-card-sub" id="consistencyLabel">% of profitable periods</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative;">
+                        <span class="inst-info-icon" data-tooltip="STATISTICAL ROBUSTNESS (Edge Ratio)
+
+Compares your actual Win Rate to the minimum Win Rate strictly required to just break even (implied by your Payoff Ratio).
+
+Formula: Actual Win Rate ÷ ( 1 ÷ (1 + Payoff Ratio) )
+
+Example: Payoff 2.0 requires 33.3% WR. If your WR is 40%, Robustness = 40 / 33.3 = 1.20
+
+Benchmarks: > 1.2 = Good Edge | > 1.5 = Extremely Robust | < 1.0 = Losing Strategy">ℹ</span>
+                        <div class="stats-card-title">Statistical Robustness</div>
+                        <div class="stats-card-value" id="robustnessDisplay">--</div>
+                        <div class="stats-card-sub" id="robustnessLabel">Actual WR / Min Req WR</div>
+                    </div>
+
+                    <div class="stats-card" style="position:relative;">
+                        <span class="inst-info-icon"
+                            data-tooltip="STAND-OVER DRAWDOWN
+
+The maximum duration the strategy spent in a drawdown (from peak to new peak).
+
+Formula: Longest gap in days between two all-time equity highs.
+
+Why it matters: A 10% drawdown that lasts 2 weeks is easy to hold. A 10% drawdown that lasts 14 months requires immense psychological stamina. Measures 'Time Pain'.">ℹ</span>
+                        <div class="stats-card-title">Stand-over DD</div>
+                        <div class="stats-card-value" id="standOverDDDisplay" style="font-size:1.3em;">--</div>
+                        <div class="stats-card-sub" id="standOverDDLabel" style="margin-bottom:6px;">Max days underwater
+                        </div>
+                        <div
+                            style="display:flex; flex-direction:column; gap:2px; font-size:0.7em; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:6px;">
+                            <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span
+                                    id="soDates" style="color:var(--text-primary); font-weight:500;">--</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Peak:</span> <span
+                                    id="soPeak" style="color:var(--text-primary); font-weight:500;">--</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Lowest:</span> <span
+                                    id="soLowest" style="color:var(--text-primary); font-weight:500;">--</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Current:</span> <span
+                                    id="soCurrent" style="color:var(--text-primary); font-weight:500;">--</span></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Instrument & Timeframe Breakdown -->
+                <div
+                    style="font-size:0.75em; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); font-weight:700; margin-bottom:12px; margin-top:30px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+                    Instrument Breakdown &amp; Timeframe Ranking
+                </div>
+                <div style="overflow-x:auto;">
+                    <table
+                        style="width:100%; text-align:left; border-collapse:collapse; background:var(--bg-color); border-radius:8px; overflow:hidden;"
+                        id="instrument-breakdown-table">
+                        <thead>
+                            <tr
+                                style="background:rgba(255,255,255,0.05); border-bottom:1px solid var(--border-color); font-size:0.85em; color:var(--text-secondary); text-transform:uppercase;">
+                                <th style="padding:12px 16px;">Instrument / File</th>
+                                <th style="padding:12px 16px;">Timeframe</th>
+                                <th style="padding:12px 16px;">Trades</th>
+                                <th style="padding:12px 16px;">Win %</th>
+                                <th style="padding:12px 16px;">Net P&amp;L</th>
+                                <th style="padding:12px 16px;">Gross Win</th>
+                                <th style="padding:12px 16px;">Gross Loss</th>
+                                <th style="padding:12px 16px;">Expectancy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instrument-breakdown-body" style="font-size:0.95em;">
+                            <tr>
+                                <td colspan="8" style="padding:20px; text-align:center; opacity:0.6;">Upload data to
+                                    view breakdown</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
             <!-- Utilities -->
             <section id="utilities" style="border-top: 1px solid var(--border-color); padding-top: 20px;">
                 <div class="glass-panel" style="max-width: 600px; margin: 0 auto;">
@@ -725,105 +1308,7 @@
             </section>
         </div>
 
-        <!-- TAB: OTM ANALYSIS -->
-        <div id="tab-otm-analysis" class="tab-content">
-            <div class="glass-panel">
-                <div class="section-title">OTM Performance Analysis Filters</div>
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <label
-                            style="font-size: 0.85em; color: var(--text-secondary); font-weight: 600;">TIMEFRAME</label>
-                        <select id="otmTimeframe"
-                            style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; outline: none; min-width: 120px;">
-                            <option value="1h">1-Hour</option>
-                            <option value="4h">4-Hour</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <label style="font-size: 0.85em; color: var(--text-secondary); font-weight: 600;">OTM
-                            LEVEL</label>
-                        <select id="otmLevel"
-                            style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; outline: none; min-width: 120px;">
-                            <option value="1">OTM 1</option>
-                            <option value="2">OTM 2</option>
-                            <option value="3">OTM 3</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <label style="font-size: 0.85em; color: var(--text-secondary); font-weight: 600;">ANALYSIS
-                            AMOUNT (₹)</label>
-                        <input type="number" id="otmAmount" value="10500"
-                            style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; outline: none; width: 151px;">
-                    </div>
-                    <button onclick="generateOTMReport()" class="primary-btn" style="height: 38px; padding: 0 24px;">Run
-                        Analysis</button>
-                </div>
-            </div>
 
-            <div id="otm-results-container" style="display: none;">
-                <div class="stats-dashboard" id="otm-stats-summary">
-                    <!-- ROI Card -->
-                    <div class="stats-card">
-                        <div class="stats-card-title">Profit on Capital</div>
-                        <div class="stats-card-value" id="otmNetProfit">₹0.00</div>
-                        <div class="stats-card-sub">
-                            <span>ROI: <span id="otmROI" class="text-green">0.00%</span></span>
-                        </div>
-                    </div>
-                    <!-- Win Rate Card -->
-                    <div class="stats-card">
-                        <div class="stats-card-title">OTM Success Rate</div>
-                        <div class="stats-card-value" id="otmWinRate">0.00%</div>
-                        <div class="stats-card-sub">
-                            <span>Wins/Losses: <span id="otmWLCounts">0/0</span></span>
-                        </div>
-                    </div>
-                    <!-- Avg Result Card -->
-                    <div class="stats-card">
-                        <div class="stats-card-title">Avg per Trade</div>
-                        <div class="stats-card-value" id="otmAvgTrade">₹0.00</div>
-                        <div class="stats-card-sub">
-                            <span>Exp: <span id="otmExpectancy">₹0.00</span></span>
-                        </div>
-                    </div>
-                    <!-- Max DD Card -->
-                    <div class="stats-card">
-                        <div class="stats-card-title">Max Drawdown</div>
-                        <div class="stats-card-value text-red" id="otmMaxDD">₹0.00</div>
-                        <div class="stats-card-sub">
-                            <span>DD %: <span id="otmMaxDDPercent">0.00%</span></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-panel">
-                    <div class="section-title">Trade-by-Trade Performance Log</div>
-                    <div style="max-height: 500px; overflow-y: auto;">
-                        <table id="otm-details-table">
-                            <thead>
-                                <tr>
-                                    <th>Trade #</th>
-                                    <th>Date/Time</th>
-                                    <th>Type</th>
-                                    <th>Action</th>
-                                    <th style="text-align: right;">Price</th>
-                                    <th style="text-align: right;">P&L (INR)</th>
-                                    <th style="text-align: right;">P&L (%)</th>
-                                    <th style="text-align: right;">Return (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="otm-details-body">
-                                <!-- Populated by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div id="otm-no-data" class="glass-panel"
-                style="text-align: center; color: var(--text-secondary); padding: 40px;">
-                Upload trading data to run OTM analysis
-            </div>
-        </div>
 
         <!-- TAB 2: ANALYSIS -->
         <div id="tab-charts" class="tab-content">
@@ -1199,6 +1684,85 @@
         </div>
 
 
+
+        <!-- TAB 6: EFFICIENCY -->
+        <div id="tab-efficiency" class="tab-content">
+            <div class="stats-dashboard">
+                <div class="stats-card">
+                    <div class="stats-card-title">Global Efficiency</div>
+                    <div class="stats-card-value" id="efficiencyRatioDisplay">--</div>
+                    <div class="stats-card-sub">Net Profit / Max Drawdown</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-card-title">Total Net Profit</div>
+                    <div class="stats-card-value" id="efficiencyNetProfit">--</div>
+                    <div class="stats-card-sub" id="efficiencyNetProfitSub">Filtered Range</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-card-title">Max Drawdown</div>
+                    <div class="stats-card-value text-red" id="efficiencyMaxDD">--</div>
+                    <div class="stats-card-sub" id="efficiencyMaxDDSub">Peak to Trough</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h3 class="card-title">Efficiency Leaderboard (Per File)</h3>
+                <div class="table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th class="col-rank">Rank</th>
+                                <th>Tool / File Name</th>
+                                <th class="text-right">Total Net Profit</th>
+                                <th class="text-right">Closed DD</th>
+                                <th class="text-right">Intra DD</th>
+                                <th class="text-right">Efficiency Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="efficiency-table-body">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h3 class="card-title">Strategy Efficiency by Year (Pivot Matrix)</h3>
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="report-table" id="efficiency-matrix-table">
+                        <thead id="efficiency-matrix-head">
+                            <!-- Headers will be dynamic years -->
+                        </thead>
+                        <tbody id="efficiency-matrix-body">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h3 class="card-title">Efficiency Leaderboard (Per Year)</h3>
+                <div class="table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th class="col-rank">Rank</th>
+                                <th>Year / File</th>
+                                <th class="text-right">Total Net Profit</th>
+                                <th class="text-right">Closed DD</th>
+                                <th class="text-right">Intra DD</th>
+                                <th class="text-right">Efficiency Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="efficiency-year-table-body">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
         <!-- TAB 7: P&L REPORT (Integrated) -->
 
         <div id="tab-pnl-entry" class="tab-content">
@@ -1213,10 +1777,11 @@
                                         <th class="sortable" data-col-index="1">Date</th>
                                         <th class="sortable" data-col-index="2">Owner</th>
                                         <th class="sortable" data-col-index="3">Type</th>
-                                        <th class="sortable" data-col-index="4">Exit Date</th>
-                                        <th class="sortable" data-col-index="5">P/L</th>
-                                        <th class="sortable" data-col-index="6">Cumulative</th>
-                                        <th class="sortable" data-col-index="7">REMARK</th>
+                                        <th class="sortable" data-col-index="4">Sub Category</th>
+                                        <th class="sortable" data-col-index="5">Exit Date</th>
+                                        <th class="sortable" data-col-index="6">P/L</th>
+                                        <th class="sortable" data-col-index="7">Cumulative</th>
+                                        <th class="sortable" data-col-index="8">REMARK</th>
                                         <th class="actions-col"></th>
                                     </tr>
                                     <tr class="filter-row">
@@ -1228,12 +1793,14 @@
                                         <th><input type="text" class="filter-input" data-col="3"
                                                 placeholder="Filter Type..."></th>
                                         <th><input type="text" class="filter-input" data-col="4"
-                                                placeholder="Filter Exit..."></th>
+                                                placeholder="Sub Cat..."></th>
                                         <th><input type="text" class="filter-input" data-col="5"
+                                                placeholder="Filter Exit..."></th>
+                                        <th><input type="text" class="filter-input" data-col="6"
                                                 placeholder="Filter P/L..."></th>
-                                        <th><input type="text" class="filter-input" data-col="6" placeholder="Cum...">
+                                        <th><input type="text" class="filter-input" data-col="7" placeholder="Cum...">
                                         </th>
-                                        <th><input type="text" class="filter-input" data-col="7"
+                                        <th><input type="text" class="filter-input" data-col="8"
                                                 placeholder="Filter Remark...">
                                         </th>
                                         <th></th>
@@ -1250,6 +1817,35 @@
                             <button id="add-row-btn" class="add-btn">
                                 <span class="btn-icon">+</span> Add Row
                             </button>
+
+                            <button id="btn-import-pnl-csv" class="add-btn"
+                                style="background: var(--surface-hover); border: 1px dashed var(--accent-color); color: var(--accent-color);">
+                                <span class="btn-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </span>
+                                Import CSV
+                            </button>
+                            <input type="file" id="pnl-csv-import" accept=".csv" style="display: none;">
+
+                            <button id="btn-sync-now" class="add-btn"
+                                style="background: var(--surface-hover); border: 1px solid var(--accent-color); color: var(--accent-color); padding: 8px 16px;">
+                                <span class="btn-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M23 4v6h-6"></path>
+                                        <path d="M1 20v-6h6"></path>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                                        </path>
+                                    </svg>
+                                </span>
+                                Sync Now
+                            </button>
+
 
                             <div class="toggle-container"
                                 style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
@@ -1376,7 +1972,14 @@
 
                             <!-- Type Leaderboard -->
                             <div class="report-column card">
-                                <h3 class="card-title">Type Performance</h3>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h3 class="card-title" style="margin-bottom: 0;">Type Performance</h3>
+                                    <select id="filter-dash-subcat" class="filter-input"
+                                        style="width: auto; height: 32px; padding: 0 8px; font-size: 0.8rem;">
+                                        <option value="">All Sub Categories</option>
+                                    </select>
+                                </div>
                                 <div class="table-container">
                                     <table class="report-table">
                                         <thead>
@@ -1396,6 +1999,35 @@
                                 </div>
                             </div>
 
+                            <!-- Sub Category Leaderboard (NEW) -->
+                            <div class="report-column card">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h3 class="card-title" style="margin-bottom: 0;">Sub-Category Performance</h3>
+                                    <select id="filter-subcat-type" class="filter-input"
+                                        style="width: auto; height: 32px; padding: 0 8px; font-size: 0.8rem;">
+                                        <option value="">All Types</option>
+                                    </select>
+                                </div>
+                                <div class="table-container">
+                                    <table class="report-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="col-rank">Rank</th>
+                                                <th>Instrument</th>
+                                                <th class="col-pl text-right">Total P/L</th>
+                                                <th class="col-trades text-right">Trades</th>
+                                                <th class="col-win text-right">Win %</th>
+                                                <th class="col-rr text-right">RR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="subcat-pl-body">
+                                            <!-- Report rows will be here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                             <!-- Chart Card (Owner) -->
                             <div class="card chart-card">
                                 <h3 class="card-title">Owner Performance Chart</h3>
@@ -1409,6 +2041,14 @@
                                 <h3 class="card-title">Type Performance Chart</h3>
                                 <div class="chart-container" style="position: relative; height: 300px;">
                                     <canvas id="typeChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Chart Card (Sub Category) (NEW) -->
+                            <div class="card chart-card">
+                                <h3 class="card-title">Sub-Category Performance Chart</h3>
+                                <div class="chart-container" style="position: relative; height: 300px;">
+                                    <canvas id="subCatChart"></canvas>
                                 </div>
                             </div>
 
@@ -1756,7 +2396,20 @@
 
                             <!-- Overall Type Performance -->
                             <div class="report-column card">
-                                <h3 class="card-title">Overall Type Performance</h3>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h3 class="card-title" style="margin-bottom: 0;">Overall Type Performance</h3>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <select id="filter-monthly-type" class="filter-input"
+                                            style="width: auto; height: 32px; padding: 0 8px; font-size: 0.8rem;">
+                                            <option value="">All Types</option>
+                                        </select>
+                                        <select id="filter-monthly-subcat" class="filter-input"
+                                            style="width: auto; height: 32px; padding: 0 8px; font-size: 0.8rem;">
+                                            <option value="">All Sub Categories</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="table-container">
                                     <table class="report-table">
                                         <thead>
@@ -1765,11 +2418,18 @@
                                                 <th>Type</th>
                                                 <th class="col-pl text-right">Total P/L</th>
                                                 <th class="col-trades text-right">Trades</th>
+                                                <th class="text-right">Initial Capital</th>
+                                                <th class="text-right">P/L - Cap</th>
+                                                <th class="text-right">Max Profit</th>
+                                                <th class="text-right">Drawdown</th>
                                             </tr>
                                             <tr class="filter-row">
                                                 <th></th>
-                                                <th><input type="text" id="filter-monthly-type" class="filter-input"
-                                                        placeholder="Search Type..."></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
                                                 <th></th>
                                                 <th></th>
                                             </tr>
@@ -2051,30 +2711,9 @@
                             </div>
                         </div>
 
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th
-                                        style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
-                                        Date</th>
-                                    <th
-                                        style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
-                                        Owner</th>
-                                    <th
-                                        style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
-                                        Type</th>
-                                    <th
-                                        style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
-                                        Exit Date</th>
-                                    <th
-                                        style="padding: 10px; text-align: right; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
-                                        P/L</th>
-                                </tr>
-                            </thead>
-                            <tbody id="details-table-body">
-                                <!-- Rows -->
-                            </tbody>
-                        </table>
+                        <div id="details-data-container">
+                            <!-- JS will inject tables here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2262,6 +2901,7 @@
             }
 
             calculateAndRender(filtered);
+            try { renderEfficiencyTab(filtered); } catch (e) { console.error(e); }
 
             // Prioritize Streak Analysis (User Focus)
             try { renderStreakAnalysis(filtered); } catch (e) { console.error(e); }
@@ -2428,9 +3068,15 @@
                         }
                     }
 
-                    // Append mode
-                    // Optionally deduplicate? For now, we assume user adds different files.
-                    parsedTrades = parsedTrades.concat(newTrades);
+                    // Append mode with file-level deduplication
+                    const existingFiles = new Set(parsedTrades.map(t => t.sourceFile).filter(Boolean));
+                    const trulyNew = newTrades.filter(t => !existingFiles.has(t.sourceFile));
+
+                    if (trulyNew.length === 0 && newTrades.length > 0) {
+                        alert("Warning: These files are already loaded. No new trades added.");
+                    }
+
+                    parsedTrades = parsedTrades.concat(trulyNew);
                 } else {
                     // Overwrite mode
                     parsedTrades = newTrades;
@@ -2662,8 +3308,11 @@
                 const norm = c.replace(/[^a-z0-9]/g, '');
 
                 // Relaxed Type matching
-                if (c.includes('type') || c.includes('side') || c.includes('direction') || c.includes('signal')) typeIdx = i;
-
+                if (c.includes('type') || c.includes('side') || c.includes('direction') || c.includes('signal') || c === 'transaction' || c === 'entry') {
+                    if (typeIdx === -1 && !c.includes('time') && !c.includes('price') && !c.includes('date')) {
+                        typeIdx = i;
+                    }
+                }
                 // Safe Date matching: Prioritize ENTRY/OPEN date
                 // Check if this column is explicitly an ENTRY or OPEN date/time
                 const isEntry = c.includes('entry') || c.includes('open');
@@ -2717,8 +3366,8 @@
 
                 // Run-up / Drawdown matching
                 // Must exclude percentages to avoid capturing "Run-up %"
-                if ((norm.includes('runup') || norm.includes('runupinr')) && !isPct) runupIdx = i;
-                if (norm.includes('drawdown') && !isPct) drawdownIdx = i;
+                if ((norm.includes('runup') || norm.includes('runupinr') || norm.includes('maxprofit') || norm.includes('mfe') || norm.includes('favorable')) && !isPct) runupIdx = i;
+                if ((norm.includes('drawdown') || norm.includes('minprofit') || norm.includes('mae') || norm.includes('adverse')) && !isPct) drawdownIdx = i;
 
                 // Safe PnL matching logic with Priority
                 // Priority 1: "Net Realized P&L" (Common in some reports)
@@ -2728,7 +3377,7 @@
                 const isRealized = c.includes('realized') && (c.includes('p&l') || c.includes('profit') || c.includes('pl'));
                 const isNet = (c.includes('net') && (c.includes('p&l') || c.includes('profit') || c.includes('pl')));
                 const isGeneric = (c.includes('p&l') || c.includes('profit') || c.includes('gain') || c.includes('loss') || c === 'amount');
-                const excluded = norm.includes('cumulative') || norm.includes('runup') || norm.includes('drawdown') || c.includes('%') || c.includes('percent');
+                const excluded = norm.includes('cumulative') || norm.includes('runup') || norm.includes('drawdown') || c.includes('%') || c.includes('percent') || c.includes('min') || c.includes('max');
 
                 if (!excluded) {
                     if (isRealized && !c.includes('unrealized')) {
@@ -2832,36 +3481,34 @@
                 if (cols.length <= Math.max(typeIdx, dateIdx, pnlIdx)) continue;
 
                 let isExit = false;
+                let isEntry = false;
                 let currentType = '';
 
                 // 1. Check Explicit Type
                 if (typeIdx !== -1 && cols[typeIdx]) {
                     currentType = cols[typeIdx];
                     const tLower = currentType.toLowerCase();
-                    const isEntry = tLower.includes('entry') || tLower.includes('open');
+                    isEntry = tLower.includes('entry') || tLower.includes('open');
                     // Explicit Exit?
                     if (tLower.includes('exit') || tLower.includes('close')) {
                         isExit = true;
                     }
-
-                    if (isEntry) continue; // Always skip explicitly marked entries in Pass 2
                 }
 
                 // 2. Check Implicit Exit via P&L
-                // If not marked as exit yet, check if it has valid P&L
                 if (!isExit) {
                     let pnlVal = 0;
                     if (pnlIdx !== -1 && cols.length > pnlIdx) {
                         pnlVal = parseMoney(cols[pnlIdx]);
                     }
-                    // If non-zero P&L, treat as Exit (e.g. "Buy" or "Sell" row with profit)
                     if (Math.abs(pnlVal) > 0.0001) {
                         isExit = true;
                     }
                 }
 
-                // 3. Final Check
-                if (!isExit) continue; // Skip if neither explicit nor implicit exit
+                // 3. Final Check (Fix for single-row trades)
+                if (isEntry && !isExit) continue;
+                if (!isExit) continue;
 
                 // Ensure data validity
                 if (cols.length <= pnlIdx) continue;
@@ -2869,9 +3516,6 @@
                 let dateStr = cols[dateIdx];
 
                 // If we also found a separate Time column, append it
-                // DEFAULT behavior: use timeIdx (which is likely Entry Time).
-                // But for Exit Rows, we might want to check exitTimeIdx first?
-                // Actually, let's capture the 'dateStr' as-is for now, and strictly fix it in the Exit Capture block below.
                 if (timeIdx !== -1 && cols[timeIdx]) {
                     if (dateStr && !dateStr.includes(':')) {
                         dateStr += ' ' + cols[timeIdx];
@@ -2879,26 +3523,22 @@
                 }
 
                 // Capture EXIT Data (before we overwrite with Entry Cache)
-                // Since Pass 2 iterates Exit rows by default (lines 1460+), 'dateStr', 'cols[timeIdx]', and 'signalName' are currently Exit data.
                 let signalName = (typeIdx > -1 && cols[typeIdx]) ? cols[typeIdx] : '';
                 const exitSignal = signalName || '';
 
                 // Build Specific Exit Date/Time String
-                // If we have a specific Exit Date Column, use that instead of dateIdx
                 let rawExitDateStr = (exitDateIdx !== -1 && cols[exitDateIdx]) ? cols[exitDateIdx] : cols[dateIdx];
                 if (exitTimeIdx !== -1 && cols[exitTimeIdx]) {
-                    // Use the specific Exit Time column
                     if (rawExitDateStr && !rawExitDateStr.includes(':')) {
                         rawExitDateStr += ' ' + cols[exitTimeIdx];
                     }
                 } else if (timeIdx !== -1 && cols[timeIdx]) {
-                    // Fallback to standard Time column (might be same as Entry Time if CSV is weird)
                     if (rawExitDateStr && !rawExitDateStr.includes(':')) {
                         rawExitDateStr += ' ' + cols[timeIdx];
                     }
                 }
 
-                const exitDateVal = parseDate(rawExitDateStr); // Use helper to parse Exit Date/Time
+                const exitDateVal = parseDate(rawExitDateStr);
                 let exitTimeStr = '';
                 let exitHour = 0;
                 let exitMinute = 0;
@@ -2915,17 +3555,13 @@
                     exitPrice = parseFloat(cols[priceIdx].replace(/[^0-9.]/g, '')) || 0;
                 }
 
-                // CHECK CACHE for Entry Time (Override current row's time)
+                // CHECK CACHE for Entry Time
                 if (tradeNumIdx !== -1) {
                     const tradeId = cols[tradeNumIdx].replace(/[^a-z0-9]/gi, '');
                     if (entryCache[tradeId]) {
-                        dateStr = entryCache[tradeId].date; // Use the cached Entry Date!
+                        dateStr = entryCache[tradeId].date;
                         if (entryCache[tradeId].signal) {
                             signalName = entryCache[tradeId].signal;
-                        }
-                        if (entryCache[tradeId].price) {
-                            // Store Entry Price if found in cache
-                            cols['entryPrice'] = entryCache[tradeId].price; // Temporary storage on cols array logic? No, let's use a variable.
                         }
                     }
                 }
@@ -2939,18 +3575,11 @@
                     }
                 }
 
-                // Fallback: If signal still says "Exit", force it to "Entry" format
-                // This handles cases where cache lookup fails but we know the direction from the Exit signal.
-                // Fallback Removed per user request ("no automatically renames")
-                // We rely on Two-Pass Cache to find the correct Entry Signal.
-                // if (signalName && signalName.toLowerCase().includes('exit')) ...
-
                 let pnl = 0;
                 try {
-                    // Cleanup currency symbols
                     if (cols[pnlIdx]) pnl = parseMoney(cols[pnlIdx]);
                 } catch (e) { /* ignore */ }
-                if (isNaN(pnl)) pnl = 0; // Ensure pnl is a number
+                if (isNaN(pnl)) pnl = 0;
 
                 // Parse Run-up / Drawdown if available
                 let fileRunUp = undefined;
@@ -2971,39 +3600,30 @@
                 }
 
                 trades.push({
-                    tradeId: tId, // New Field for Dedupe
+                    tradeId: tId,
                     signalName: signalName,
-                    exitSignal: exitSignal, // New Field
-
+                    exitSignal: exitSignal,
                     dateStr: dateStr,
-                    exitDateStr: exitDateVal ? dateStr : dateStr, // Keep original if needed, but we have fields below
-
+                    exitDateStr: exitDateVal ? rawExitDateStr : dateStr,
                     month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
                     daily: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
                     exitDaily: exitDateVal ? `${exitDateVal.getFullYear()}-${String(exitDateVal.getMonth() + 1).padStart(2, '0')}-${String(exitDateVal.getDate()).padStart(2, '0')}` : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
                     time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
-
-                    price: entryPrice,    // Entry Price
-                    exitPrice: exitPrice, // Exit Price
-
-                    exitTime: exitTimeStr, // New Field
-                    exitHour: exitHour,    // New Field
-                    exitMinute: exitMinute,// New Field
-
+                    price: entryPrice,
+                    exitPrice: exitPrice,
+                    exitTime: exitTimeStr,
+                    exitHour: exitHour,
+                    exitMinute: exitMinute,
                     hour: d.getHours(),
                     minute: d.getMinutes(),
                     timestamp: d.getTime(),
-
                     pnl: pnl,
-                    originalPnl: pnl, // Storing for scaling
-
-                    fileRunUp: fileRunUp > 0 ? fileRunUp : undefined,
-                    originalFileRunUp: fileRunUp > 0 ? fileRunUp : undefined,
-
-                    fileDrawdown: fileDrawdown < 0 ? fileDrawdown : undefined,
-                    originalFileDrawdown: fileDrawdown < 0 ? fileDrawdown : undefined,
-
-                    displayRU: 0, // placeholders
+                    originalPnl: pnl,
+                    fileRunUp: (fileRunUp !== 0 && fileRunUp !== undefined) ? Math.abs(fileRunUp) : undefined,
+                    originalFileRunUp: (fileRunUp !== 0 && fileRunUp !== undefined) ? Math.abs(fileRunUp) : undefined,
+                    fileDrawdown: (fileDrawdown !== 0 && fileDrawdown !== undefined) ? -Math.abs(fileDrawdown) : undefined,
+                    originalFileDrawdown: (fileDrawdown !== 0 && fileDrawdown !== undefined) ? -Math.abs(fileDrawdown) : undefined,
+                    displayRU: 0,
                     displayDD: 0
                 });
             }
@@ -3025,7 +3645,6 @@
             // If duplicates exist, we keep the FIRST one we encountered (which usually is Entry if file is sorted old->new).
             // Actually, Exit rows usually have the P&L. If Entry has it too... it doesn't matter which we keep as long as data is same.
             // BUT, Exit rows have 'exitTime' populated correctly from my logic?
-            // "Entry" rows might lack exit time if I parsed it from current row.
             // The "Real" Exit rows has Date = Exit Date.
             // If I dedupe by TradeID + PNL, I collapse them.
             // I should prefer the one with LATER Date (Exit Date)?
@@ -3063,14 +3682,18 @@
         }
         function parseDate(str) {
             if (!str) return null;
-            // distinct date and time
-            const [datePart, timePart] = str.trim().split(/\s+/);
 
-            // Try ISO first
+            // Try standard Date parsing first for unambiguous formats (has month names or standard ISO)
             let d = new Date(str);
-            if (!isNaN(d.getTime()) && str.includes('-') && (d.getFullYear() > 1900)) return d;
+            if (!isNaN(d.getTime()) && d.getFullYear() > 1900 && (/[a-zA-Z]/.test(str) || str.includes('T') || (str.includes('-') && str.split('-')[0].length === 4))) {
+                return d;
+            }
 
-            // Custom parsing for DD-MM-YYYY etc
+            // Custom parsing for ambiguous numeric formats like DD-MM-YYYY, DD/MM/YYYY
+            const partsInfo = str.trim().split(/\s+/);
+            const datePart = partsInfo[0];
+            const timePart = partsInfo.slice(1).join(' '); // Rejoin in case of AM/PM
+
             if (!datePart) return null;
 
             const parts = datePart.split(/[-/.]/);
@@ -3302,7 +3925,8 @@
 
             // Drawdown vars
             let peak = 0;
-            let maxDD = 0;
+            let maxDD = 0; // Absolute worst (Intra-trade if exists, else Closed)
+            let maxClosedDD = 0; // Strictly closed-trade peak to trough
             let running = 0;
             let peakDate = trades.length > 0 ? trades[0].daily : '-';
             let peakTimestamp = trades.length > 0 ? trades[0].timestamp : 0;
@@ -3321,22 +3945,44 @@
             let runUpRange = '';
 
             trades.forEach(t => {
+                // High-Resolution Drawdown Sync:
+                // Check if this trade had an intra-trade trough deeper than the realized trough
+                if (t.fileDrawdown !== undefined) {
+                    const intraDip = (running + t.fileDrawdown) - peak;
+                    if (intraDip < maxDD) {
+                        maxDD = intraDip;
+                        maxDDPeakValue = peak;
+                        maxDDTroughIndex = trades.indexOf(t);
+                        maxDDTroughTimestamp = t.timestamp;
+
+                        const days = Math.floor((t.timestamp - peakTimestamp) / (1000 * 60 * 60 * 24));
+                        ddRange = `<div onclick="applyHistoryFilter('${peakDate}', '${t.daily}')" style="background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; flex:1; display:flex; flex-direction:column; cursor:pointer;" title="Click to filter this period">
+                            <span style="font-size:0.7em; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Intra-Trade Drop</span>
+                            <span style="font-size:1.2em; font-weight:800; color:#f1f5f9;">${days} Days</span>
+                            <span style="font-size:0.75em; color:#cbd5e1; margin-top:2px;">${formatDate(peakDate)} to ${formatDate(t.daily)}</span>
+                        </div>`;
+                    }
+                }
+
                 running += t.pnl;
 
-                // Drawdown Logic
-                // Drawdown Logic
+                // Realized Drawdown Logic
                 if (running > peak) {
                     peak = running;
                     peakDate = t.daily;
                     peakTimestamp = t.timestamp;
                 }
                 const dd = running - peak;
+                if (dd < maxClosedDD) {
+                    maxClosedDD = dd;
+                }
+
                 if (dd < maxDD) {
                     maxDD = dd;
 
                     // Track for Recovery
                     maxDDPeakValue = peak;
-                    maxDDTroughIndex = trades.indexOf(t); // Note: index in sorted array 'trades'
+                    maxDDTroughIndex = trades.indexOf(t);
                     maxDDTroughTimestamp = t.timestamp;
 
                     const days = Math.floor((t.timestamp - peakTimestamp) / (1000 * 60 * 60 * 24));
@@ -3438,76 +4084,36 @@
                         if (minSingleRunUp === Infinity) minSingleRunUp = 0;
 
                         // Construct HTML
-                        // Using smaller font for the label/date parts to fit
-                        // Construct HTML
-                        // Using smaller font for the label/date parts to fit
                         elVal.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65em; margin-bottom:4px;">
-                                <span style="opacity:0.7">MAX</span>
-                                <span class="text-green" style="font-size:1.4em; font-weight:700;">
-                                    ${fmt(maxSingleRunUp)} ${pctSpan(maxSingleRunUp)}
-                                </span>
+                            <div class="metric-row">
+                                <span class="metric-label">MAX RUNUP</span>
+                                <div class="metric-value-container">
+                                    <span class="text-green metric-main-val">${fmt(maxSingleRunUp)}</span>
+                                    <span class="metric-sub-val">${pctSpan(maxSingleRunUp)}</span>
+                                </div>
                             </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65em;">
-                                <span style="opacity:0.7">MIN</span>
-                                <span style="font-size:1.1em; font-weight:600; opacity:0.9;">
-                                    ${fmt(minSingleRunUp)} ${pctSpan(minSingleRunUp)}
-                                </span>
+                            <div class="metric-row" style="border-bottom:none;">
+                                <span class="metric-label">MIN RUNUP</span>
+                                <div class="metric-value-container">
+                                    <span class="metric-main-val" style="opacity:0.9;">${fmt(minSingleRunUp)}</span>
+                                    <span class="metric-sub-val">${pctSpan(minSingleRunUp)}</span>
+                                </div>
                             </div>
                         `;
 
                         // Put dates in the bottom range slot
                         elDate.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; margin-top: -10px; font-size:0.85em; color:var(--text-primary); font-weight:600;">
-                                <span>(${formatDate(maxSingleRunUpDate)})</span>
-                                <span>(${formatDate(minSingleRunUpDate)})</span>
+                            <div style="display:flex; justify-content:space-between; width:100%; font-size:0.8em; color:var(--text-secondary); margin-top:5px;">
+                                <span>Max: ${formatDate(maxSingleRunUpDate)}</span>
+                                <span>Min: ${formatDate(minSingleRunUpDate)}</span>
                             </div>
                         `;
-
-                        // Prevent standard setText from overwriting this later?
-                        // The setText calls are at the end of the function (lines 920-921).
-                        // I need to ensure those standard lines don't overwrite this.
-                        // I should probably remove the setText calls or update the variables to be empty so setText doesn't clobber,
-                        // OR just put this logic AT THE END near the setText calls.
-                        // The user wanted "same box".
-
-                        // If I modify this here, the `setText` at lines 920 will overwrite it.
-                        // I must modify the setText calls at the bottom OR set a flag.
-
-                        // Better strategy: Update the variables `maxRunUp` and `runUpRange` to contain the HTML string?
-                        // setText uses .textContent, so HTML won't render.
-
-                        // I will define a separate render step or variable.
                         handledRunUp = true;
                     }
                 }
             }
 
-            // OVERRIDE: Same for Drawdown (Max Single Trade Drawdown)
-            const hasFileDrawdown = trades.some(t => t.fileDrawdown !== undefined);
-            if (false && hasFileDrawdown) { // UNDO: Reverted to standard Drawdown
-                let maxSingleDD = 0; // Want the lowest negative number
-                let maxSingleDDDate = '';
-
-                trades.forEach(t => {
-                    if (t.fileDrawdown !== undefined) {
-                        if (t.fileDrawdown < maxSingleDD) {
-                            maxSingleDD = t.fileDrawdown;
-                            maxSingleDDDate = t.daily;
-                        }
-                    }
-                });
-
-                if (maxSingleDD < 0) {
-                    maxDD = Math.abs(maxSingleDD); // Display as positive number usually, or keep sign?
-                    // EXISTING VISUALS: Card usually shows "-$4000" in red.
-                    // However, `maxDD` variable is usually POSITIVE in calculation (dd = running - peak, which is negative...)
-                    // Wait, original: `dd = running - peak` (negative). `if (dd < maxDD)` (maxDD init 0).
-                    // So `maxDD` stores a NEGATIVE number.
-                    maxDD = maxSingleDD;
-                    ddRange = `(${formatDate(maxSingleDDDate)})`;
-                }
-            }
+            // High-Resolution Sync already handled in loop above.
 
 
 
@@ -3581,7 +4187,29 @@
             }
 
             const maxDDEl = document.getElementById('maxDrawdown');
-            if (maxDDEl) maxDDEl.innerHTML = `${fmt(maxDD)} <div style="font-size:0.5em; opacity:0.75; margin-top:4px;">${pctSpan(maxDD)}</div>`;
+            if (maxDDEl) {
+                const hasIntra = trades.some(t => t.fileDrawdown !== undefined);
+                if (hasIntra) {
+                    maxDDEl.innerHTML = `
+                         <div class="metric-row">
+                            <span class="metric-label">INTRA-TRADE</span>
+                            <div class="metric-value-container">
+                                <span class="text-red metric-main-val">${fmt(maxDD)}</span>
+                                <span class="metric-sub-val">${pctSpan(maxDD)}</span>
+                            </div>
+                        </div>
+                        <div class="metric-row" style="border-bottom:none;">
+                            <span class="metric-label">CLOSED-TRADE</span>
+                            <div class="metric-value-container">
+                                <span class="metric-main-val" style="opacity:0.9;">${fmt(maxClosedDD)}</span>
+                                <span class="metric-sub-val">${pctSpan(maxClosedDD)}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    maxDDEl.innerHTML = `${fmt(maxDD)} <div style="font-size:0.5em; opacity:0.75; margin-top:4px;">${pctSpan(maxDD)}</div>`;
+                }
+            }
 
             const elDD = document.getElementById('maxDrawdownDateRange');
             if (elDD) elDD.innerHTML = ddRange;
@@ -3664,6 +4292,9 @@
             renderTradeList(trades);
             updateView(trades);
             try { renderCorrelationAnalysis(trades); } catch (e) { console.error("Correlation error:", e); }
+
+            // --- Institutional Metrics ---
+            try { calculateCapitalMetrics(trades, totalNetPL, grossProfit, grossLoss, maxDD); } catch (e) { console.error("Capital metrics error:", e); }
         }
 
         function formatDate(isoStr) {
@@ -3676,6 +4307,687 @@
         function setText(id, txt) {
             const el = document.getElementById(id);
             if (el) el.textContent = txt;
+        }
+
+        // ============================================================
+        // INSTITUTIONAL METRICS — Capital, CAGR, Sharpe, Sortino, Calmar
+        // ============================================================
+
+        function getDeployedCapital() {
+            const inp = document.getElementById('deployedCapitalInput');
+            if (inp && inp.value && parseFloat(inp.value) > 0) return parseFloat(inp.value);
+            return parseFloat(localStorage.getItem('deployedCapital') || '0');
+        }
+
+        function saveCapitalAndRefresh() {
+            const inp = document.getElementById('deployedCapitalInput');
+            if (inp) localStorage.setItem('deployedCapital', inp.value);
+            if (typeof parsedTrades !== 'undefined' && parsedTrades.length > 0) applyFilters();
+        }
+
+        function calculateCapitalMetrics(trades, totalNetPL, grossProfit, grossLoss, maxDD) {
+            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+            const fmtPct = (v) => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
+            const capital = getDeployedCapital();
+
+            // Restore saved capital input
+            const inp = document.getElementById('deployedCapitalInput');
+            if (inp && !inp.value) {
+                const saved = localStorage.getItem('deployedCapital');
+                if (saved) inp.value = saved;
+            }
+
+            // --- Profit Factor (works even without capital) ---
+            const pf = grossLoss > 0 ? (grossProfit / grossLoss) : null;
+            const pfEl = document.getElementById('profitFactorDisplay');
+            if (pfEl) {
+                if (pf !== null) {
+                    pfEl.textContent = pf.toFixed(2);
+                    pfEl.className = pf >= 2 ? 'stats-card-value text-green' : (pf >= 1.5 ? 'stats-card-value' : (pf >= 1 ? 'stats-card-value' : 'stats-card-value text-red'));
+                } else { pfEl.textContent = '--'; }
+            }
+
+            // --- Std Dev of daily P&L (works even without capital) ---
+            const dailyMap = {};
+            trades.forEach(t => {
+                let d = null;
+                if (t.timestamp) {
+                    d = new Date(t.timestamp).toISOString().split('T')[0];
+                } else if (t.daily) {
+                    d = t.daily;
+                } else if (t.date) {
+                    d = t.date.split('T')[0];
+                }
+                if (d) { dailyMap[d] = (dailyMap[d] || 0) + t.pnl; }
+            });
+            const dailyValues = Object.values(dailyMap);
+            let stdDev = 0, downDev = 0;
+            if (dailyValues.length > 1) {
+                const mean = dailyValues.reduce((a, b) => a + b, 0) / dailyValues.length;
+                const variance = dailyValues.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / dailyValues.length;
+                stdDev = Math.sqrt(variance);
+                // Downside deviation (only negative deviations from 0)
+                const negVals = dailyValues.filter(v => v < 0);
+                const downVariance = negVals.length > 0
+                    ? negVals.reduce((acc, v) => acc + Math.pow(v, 2), 0) / dailyValues.length
+                    : 0;
+                downDev = Math.sqrt(downVariance);
+            }
+            const stdDevEl = document.getElementById('stdDevDisplay');
+            if (stdDevEl) {
+                stdDevEl.textContent = stdDev > 0 ? fmt(stdDev) : '--';
+                stdDevEl.className = 'stats-card-value';
+            }
+
+            // --- If no capital set, show placeholder for capital-dependent metrics ---
+            const capEl = document.getElementById('capitalDeployedDisplay');
+            if (capital <= 0) {
+                if (capEl) capEl.textContent = '-- (Set above)';
+                ['totalReturnPctDisplay', 'cagrDisplay', 'sharpeDisplay', 'sortinoDisplay', 'calmarDisplay'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { el.textContent = '--'; el.className = 'stats-card-value'; }
+                });
+                ['sharpeLabel', 'sortinoLabel', 'calmarLabel'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = 'Enter capital above';
+                });
+                return;
+            }
+
+            // Bind click events to open the Strategy Modal
+            const clickableCards = ['capitalDeployedDisplay', 'totalReturnPctDisplay', 'cagrDisplay', 'profitFactorDisplay', 'sharpeDisplay', 'sortinoDisplay', 'calmarDisplay', 'stdDevDisplay'];
+            clickableCards.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.parentElement) {
+                    el.parentElement.style.cursor = 'pointer';
+                    el.parentElement.onclick = () => showStrategyMetricsModal(trades);
+                }
+            });
+
+            // --- Capital Deployed ---
+            if (capEl) { capEl.textContent = fmt(capital); }
+
+            // --- Total Return % ---
+            const returnPct = (totalNetPL / capital) * 100;
+            const retEl = document.getElementById('totalReturnPctDisplay');
+            if (retEl) {
+                retEl.textContent = fmtPct(returnPct);
+                retEl.className = returnPct >= 0 ? 'stats-card-value text-green' : 'stats-card-value text-red';
+            }
+
+            // --- CAGR ---
+            const dates = trades.map(t => t.timestamp).filter(Boolean);
+            const minDate = dates.length > 0 ? Math.min(...dates) : null;
+            const maxDate = dates.length > 0 ? Math.max(...dates) : null;
+            let cagrVal = null;
+            if (minDate && maxDate && maxDate > minDate) {
+                const years = (maxDate - minDate) / (365.25 * 24 * 60 * 60 * 1000);
+                if (years > 0.05) {
+                    const endValue = capital + totalNetPL;
+                    cagrVal = (Math.pow(endValue / capital, 1 / years) - 1) * 100;
+                }
+            }
+            const cagrEl = document.getElementById('cagrDisplay');
+            if (cagrEl) {
+                if (cagrVal !== null) {
+                    cagrEl.textContent = fmtPct(cagrVal);
+                    cagrEl.className = cagrVal >= 15 ? 'stats-card-value text-green' : (cagrVal >= 0 ? 'stats-card-value' : 'stats-card-value text-red');
+                } else { cagrEl.textContent = 'N/A'; }
+            }
+
+            // --- Sharpe Ratio (annualized, risk-free = 6.5%) ---
+            const riskFreeDaily = 0.065 / 252;
+            let sharpe = null;
+            if (stdDev > 0 && dailyValues.length > 5) {
+                const meanDaily = dailyValues.reduce((a, b) => a + b, 0) / dailyValues.length;
+                const meanDailyPct = meanDaily / capital;
+                const stdDevPct = stdDev / capital;
+                const excessReturn = meanDailyPct - riskFreeDaily;
+                sharpe = (excessReturn / stdDevPct) * Math.sqrt(252);
+            }
+            const sharpeEl = document.getElementById('sharpeDisplay');
+            const sharpeLbEl = document.getElementById('sharpeLabel');
+            if (sharpeEl) {
+                if (sharpe !== null) {
+                    sharpeEl.textContent = sharpe.toFixed(2);
+                    sharpeEl.className = sharpe >= 2 ? 'stats-card-value text-green' : (sharpe >= 1 ? 'stats-card-value' : 'stats-card-value text-red');
+                    if (sharpeLbEl) sharpeLbEl.textContent = sharpe >= 2 ? 'Excellent ✓' : (sharpe >= 1 ? 'Good' : 'Below benchmark');
+                } else { sharpeEl.textContent = 'N/A'; }
+            }
+
+            // --- Sortino Ratio ---
+            let sortino = null;
+            if (downDev > 0 && dailyValues.length > 5) {
+                const meanDaily = dailyValues.reduce((a, b) => a + b, 0) / dailyValues.length;
+                const meanDailyPct = meanDaily / capital;
+                const downDevPct = downDev / capital;
+                const excessReturn = meanDailyPct - riskFreeDaily;
+                sortino = (excessReturn / downDevPct) * Math.sqrt(252);
+            }
+            const sortinoEl = document.getElementById('sortinoDisplay');
+            const sortinoLbEl = document.getElementById('sortinoLabel');
+            if (sortinoEl) {
+                if (sortino !== null) {
+                    sortinoEl.textContent = sortino.toFixed(2);
+                    sortinoEl.className = sortino >= 3 ? 'stats-card-value text-green' : (sortino >= 1.5 ? 'stats-card-value' : 'stats-card-value text-red');
+                    if (sortinoLbEl) sortinoLbEl.textContent = sortino >= 3 ? 'Excellent ✓' : (sortino >= 1.5 ? 'Good' : 'Below benchmark');
+                } else { sortinoEl.textContent = 'N/A'; }
+            }
+
+            // --- Calmar Ratio ---
+            const calmarEl = document.getElementById('calmarDisplay');
+            const calmarLbEl = document.getElementById('calmarLabel');
+            if (calmarEl) {
+                if (cagrVal !== null && maxDD < 0) {
+                    const maxDDPct = (Math.abs(maxDD) / capital) * 100;
+                    const calmar = maxDDPct > 0 ? cagrVal / maxDDPct : null;
+                    if (calmar !== null) {
+                        calmarEl.textContent = calmar.toFixed(2);
+                        calmarEl.className = calmar >= 3 ? 'stats-card-value text-green' : (calmar >= 1 ? 'stats-card-value' : (calmar >= 0.5 ? 'stats-card-value' : 'stats-card-value text-red'));
+                        if (calmarLbEl) calmarLbEl.textContent = calmar >= 3 ? 'Excellent ✓' : (calmar >= 1 ? 'Good' : (calmar >= 0.5 ? 'Acceptable' : 'Below benchmark'));
+                    } else { calmarEl.textContent = 'N/A'; }
+                } else { calmarEl.textContent = '--'; if (calmarLbEl) calmarLbEl.textContent = 'Needs CAGR + DD data'; }
+            }
+
+            // ==========================================
+            // NEW METRICS: EXPECTANCY, PAYOFF, CONSISTENCY, ROBUSTNESS, STAND-OVER DD
+            // ==========================================
+
+            // 1. Payoff Ratio & Expectancy
+            const totalTR = trades.length;
+            const winTR = trades.filter(t => t.pnl > 0).length;
+            const lossTR = trades.filter(t => t.pnl <= 0).length;
+            const winRateT = totalTR > 0 ? winTR / totalTR : 0;
+            const lossRateT = totalTR > 0 ? lossTR / totalTR : 0;
+
+            const totalWinAmt = trades.filter(t => t.pnl > 0).reduce((a, b) => a + b.pnl, 0);
+            const totalLossAmt = Math.abs(trades.filter(t => t.pnl <= 0).reduce((a, b) => a + b.pnl, 0));
+            const avgWinAmt = winTR > 0 ? totalWinAmt / winTR : 0;
+            const avgLossAmt = lossTR > 0 ? totalLossAmt / lossTR : 0;
+
+            const payoffRatio = avgLossAmt > 0 ? (avgWinAmt / avgLossAmt) : (avgWinAmt > 0 ? 99 : 0);
+            const expectancy = (winRateT * avgWinAmt) - (lossRateT * avgLossAmt);
+
+            const expEl = document.getElementById('expectancyDisplay');
+            if (expEl) {
+                expEl.textContent = totalTR > 0 ? fmt(expectancy) : '--';
+                expEl.className = expectancy > 0 ? 'stats-card-value text-green' : 'stats-card-value text-red';
+            }
+            const payoffEl = document.getElementById('payoffDisplay');
+            if (payoffEl) {
+                payoffEl.textContent = totalTR > 0 ? payoffRatio.toFixed(2) : '--';
+                payoffEl.className = payoffRatio >= 1.5 ? 'stats-card-value text-green' : (payoffRatio >= 1 ? 'stats-card-value' : 'stats-card-value text-red');
+            }
+
+            // 2. Statistical Robustness (Actual WR / Min Req WR)
+            const minReqWR = payoffRatio > 0 ? 1 / (1 + payoffRatio) : 1;
+            const robustness = totalTR > 0 && minReqWR > 0 ? winRateT / minReqWR : 0;
+            const robEl = document.getElementById('robustnessDisplay');
+            const robLb = document.getElementById('robustnessLabel');
+            if (robEl && robLb) {
+                if (totalTR > 0) {
+                    robEl.textContent = robustness.toFixed(2);
+                    robEl.className = robustness >= 1.2 ? 'stats-card-value text-green' : (robustness >= 1.0 ? 'stats-card-value' : 'stats-card-value text-red');
+                    robLb.textContent = `Req WR: ${(minReqWR * 100).toFixed(1)}%`;
+                } else {
+                    robEl.textContent = '--';
+                }
+            }
+
+            // 3. Consistency (Monthly / Yearly)
+            const monthlyPnl = {};
+            const yearlyPnl = {};
+            trades.forEach(t => {
+                if (!t.date && !t.timestamp) return;
+                const d = new Date(t.timestamp || t.date);
+                if (isNaN(d.getTime())) return;
+                const mKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const yKey = `${d.getFullYear()}`;
+                monthlyPnl[mKey] = (monthlyPnl[mKey] || 0) + t.pnl;
+                yearlyPnl[yKey] = (yearlyPnl[yKey] || 0) + t.pnl;
+            });
+
+            const mVals = Object.values(monthlyPnl);
+            const yVals = Object.values(yearlyPnl);
+            const mWin = mVals.filter(v => v > 0).length;
+            const yWin = yVals.filter(v => v > 0).length;
+            const mCons = mVals.length > 0 ? (mWin / mVals.length) * 100 : 0;
+            const yCons = yVals.length > 0 ? (yWin / yVals.length) * 100 : 0;
+
+            const consEl = document.getElementById('consistencyDisplay');
+            if (consEl) {
+                consEl.textContent = mVals.length > 0 ? `${mCons.toFixed(0)}% / ${yCons.toFixed(0)}%` : '-- / --';
+                consEl.className = mCons >= 60 ? 'stats-card-value text-green' : (mCons >= 50 ? 'stats-card-value' : 'stats-card-value text-red');
+            }
+
+            // 4. Stand-over DD (Max days spent in DD)
+            let maxStandOver = { days: 0, startTs: null, endTs: null, peakVal: 0, lowestVal: 0, currentVal: 0, ongoing: false };
+            let currentPeakIdx = 0;
+            let runningBal = 0;
+            let peakBal = 0;
+            let currentLowest = 0;
+            let inDrawdown = false;
+
+            for (let i = 0; i < trades.length; i++) {
+                runningBal += trades[i].pnl;
+
+                if (runningBal > peakBal) {
+                    if (inDrawdown && currentPeakIdx >= 0 && trades[currentPeakIdx]) {
+                        const tStart = trades[currentPeakIdx].timestamp;
+                        const tEnd = trades[i].timestamp;
+                        if (tStart && tEnd) {
+                            const daysDD = (tEnd - tStart) / (1000 * 60 * 60 * 24);
+                            if (daysDD > maxStandOver.days) {
+                                maxStandOver = {
+                                    days: daysDD,
+                                    startTs: tStart,
+                                    endTs: tEnd,
+                                    peakVal: peakBal,
+                                    lowestVal: currentLowest,
+                                    currentVal: runningBal,
+                                    ongoing: false
+                                };
+                            }
+                        }
+                    }
+                    peakBal = runningBal;
+                    currentPeakIdx = i;
+                    currentLowest = runningBal;
+                    inDrawdown = false;
+                } else if (runningBal < peakBal) {
+                    inDrawdown = true;
+                    if (runningBal < currentLowest) currentLowest = runningBal;
+
+                    if (i === trades.length - 1 && trades[currentPeakIdx]) {
+                        const tStart = trades[currentPeakIdx].timestamp;
+                        const tEnd = trades[i].timestamp;
+                        if (tStart && tEnd) {
+                            const daysDD = (tEnd - tStart) / (1000 * 60 * 60 * 24);
+                            if (daysDD > maxStandOver.days) {
+                                maxStandOver = {
+                                    days: daysDD,
+                                    startTs: tStart,
+                                    endTs: tEnd,
+                                    peakVal: peakBal,
+                                    lowestVal: currentLowest,
+                                    currentVal: runningBal,
+                                    ongoing: true
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+
+            const ddEl = document.getElementById('standOverDDDisplay');
+            const soDates = document.getElementById('soDates');
+            const soPeak = document.getElementById('soPeak');
+            const soLowest = document.getElementById('soLowest');
+            const soCurrent = document.getElementById('soCurrent');
+
+            if (ddEl && trades.length > 0 && maxStandOver.days > 0) {
+                ddEl.textContent = `${Math.floor(maxStandOver.days)} Days`;
+                ddEl.className = maxStandOver.days > 180 ? 'stats-card-value text-red' : (maxStandOver.days > 90 ? 'stats-card-value text-primary' : 'stats-card-value text-green');
+
+                if (soDates) {
+                    const sD = new Date(maxStandOver.startTs).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+                    const eD = new Date(maxStandOver.endTs).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+                    soDates.textContent = `${sD} - ${eD}`;
+                }
+                if (soPeak) soPeak.textContent = fmt(maxStandOver.peakVal);
+                if (soLowest) soLowest.textContent = fmt(maxStandOver.lowestVal);
+                if (soCurrent) soCurrent.textContent = maxStandOver.ongoing ? fmt(maxStandOver.currentVal) + ' 🔄' : 'Recovered ✅';
+            } else if (ddEl) {
+                ddEl.textContent = trades.length > 0 ? '0 Days' : '--';
+                ddEl.className = 'stats-card-value text-green';
+                if (soDates) soDates.textContent = '--';
+                if (soPeak) soPeak.textContent = '--';
+                if (soLowest) soLowest.textContent = '--';
+                if (soCurrent) soCurrent.textContent = '--';
+            }
+
+            // ==========================================
+            // INSTRUMENT BREAKDOWN & TIMEFRAME RANKING
+            // ==========================================
+            const tBody = document.getElementById('instrument-breakdown-body');
+            if (tBody) {
+                if (trades.length === 0) {
+                    tBody.innerHTML = '<tr><td colspan="8" style="padding:20px; text-align:center; opacity:0.6;">No data</td></tr>';
+                } else {
+                    const instMap = {};
+                    trades.forEach(t => {
+                        let f = t.sourceFile || "Unknown";
+                        f = f.replace(/\.csv$/i, '').trim();
+                        let inst = f; // Use the entire cleaned filename as instrument string
+
+                        const key = inst;
+                        if (!instMap[key]) {
+                            instMap[key] = { inst, tf: "Unknown", timestamps: [], trades: 0, wins: 0, pnl: 0, grossWin: 0, grossLoss: 0 };
+                        }
+                        instMap[key].trades++;
+                        instMap[key].pnl += t.pnl;
+                        if (t.timestamp) instMap[key].timestamps.push(t.timestamp);
+                        if (t.pnl > 0) {
+                            instMap[key].wins++;
+                            instMap[key].grossWin += t.pnl;
+                        } else {
+                            instMap[key].grossLoss += Math.abs(t.pnl);
+                        }
+                    });
+
+                    // Infer Timeframes from Trade Intervals
+                    Object.values(instMap).forEach(r => {
+                        const uniqueTimes = [...new Set(r.timestamps)].sort((a, b) => a - b);
+                        if (uniqueTimes.length < 2) {
+                            r.tf = "-";
+                        } else {
+                            let minDiff = Infinity;
+                            for (let i = 1; i < uniqueTimes.length; i++) {
+                                const diff = uniqueTimes[i] - uniqueTimes[i - 1];
+                                if (diff > 0 && diff < minDiff) minDiff = diff;
+                            }
+                            if (minDiff === Infinity) {
+                                r.tf = "-";
+                            } else {
+                                const mins = minDiff / 60000;
+                                if (mins >= 1440) r.tf = Math.round(mins / 1440) + "D";
+                                else if (mins >= 60) r.tf = Math.round(mins / 60) + "h";
+                                else r.tf = Math.round(mins) + "m";
+                            }
+                        }
+                    });
+
+                    const rows = Object.values(instMap).sort((a, b) => b.pnl - a.pnl);
+                    let html = '';
+                    rows.forEach(r => {
+                        const wr = (r.wins / r.trades) * 100;
+                        const lr = 100 - wr;
+                        const aw = r.wins > 0 ? r.grossWin / r.wins : 0;
+                        const al = (r.trades - r.wins) > 0 ? r.grossLoss / (r.trades - r.wins) : 0;
+                        const exp = ((wr / 100) * aw) - ((lr / 100) * al);
+
+                        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                            <td style="padding:12px 16px; font-weight:600; color:var(--text-primary);">${r.inst}</td>
+                            <td style="padding:12px 16px; color:var(--accent-color);">${r.tf}</td>
+                            <td style="padding:12px 16px;">${r.trades}</td>
+                            <td style="padding:12px 16px; color:${wr >= 50 ? '#10b981' : '#ef4444'};">${wr.toFixed(1)}%</td>
+                            <td style="padding:12px 16px; font-weight:700; color:${r.pnl >= 0 ? '#10b981' : '#ef4444'};">${fmt(r.pnl)}</td>
+                            <td style="padding:12px 16px; color:#10b981;">${fmt(r.grossWin)}</td>
+                            <td style="padding:12px 16px; color:#ef4444;">${fmt(-r.grossLoss)}</td>
+                            <td style="padding:12px 16px; font-weight:700; color:${exp >= 0 ? '#10b981' : '#ef4444'};">${fmt(exp)}</td>
+                        </tr>`;
+                    });
+                    tBody.innerHTML = html;
+                }
+            }
+        }
+
+        // ============================================================
+        // STRATEGY (FILE) LEVEL DRILL-DOWN MODAL
+        // ============================================================
+        function showStrategyMetricsModal(trades) {
+            console.log("showStrategyMetricsModal triggered. Trades length:", trades ? trades.length : 0);
+            const tbody = document.getElementById('strategyMetricsTableBody');
+            if (!tbody) {
+                console.error("strategyMetricsTableBody not found in DOM");
+                return;
+            }
+
+            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+            const fmtPct = (v) => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
+
+            const instMap = {};
+            trades.forEach(t => {
+                let f = t.sourceFile || "Unknown";
+                f = f.replace(/\.csv$/i, '').trim();
+                const key = f;
+
+                if (!instMap[key]) {
+                    instMap[key] = { inst: key, trades: [], pnl: 0 };
+                }
+                instMap[key].trades.push(t);
+                instMap[key].pnl += t.pnl;
+            });
+
+            let html = '';
+            Object.values(instMap).sort((a, b) => b.pnl - a.pnl).forEach(r => {
+                const subTrades = r.trades;
+                const netPL = r.pnl;
+
+                let capital = 0;
+                const capInput = document.querySelector(`input.cap-input[data-filename="${r.inst}.csv"]`);
+                if (capInput && capInput.value) {
+                    capital = parseFloat(capInput.value) || 0;
+                }
+
+                const winTR = subTrades.filter(t => t.pnl > 0).length;
+                const lossTR = subTrades.filter(t => t.pnl <= 0).length;
+                const winRate = subTrades.length > 0 ? (winTR / subTrades.length) * 100 : 0;
+
+                const grossWin = subTrades.filter(t => t.pnl > 0).reduce((a, b) => a + b.pnl, 0);
+                const grossLoss = Math.abs(subTrades.filter(t => t.pnl <= 0).reduce((a, b) => a + b.pnl, 0));
+                const pf = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? 99 : 0);
+
+                const dates = subTrades.map(t => t.timestamp).filter(Boolean);
+                const minDate = dates.length > 0 ? Math.min(...dates) : null;
+                const maxDate = dates.length > 0 ? Math.max(...dates) : null;
+
+                let returnPct = 0;
+                let cagr = null;
+                if (capital > 0) {
+                    returnPct = (netPL / capital) * 100;
+                    if (minDate && maxDate && maxDate > minDate) {
+                        const years = (maxDate - minDate) / (365.25 * 24 * 60 * 60 * 1000);
+                        if (years > 0.05) {
+                            cagr = (Math.pow((capital + netPL) / capital, 1 / years) - 1) * 100;
+                        }
+                    }
+                }
+
+                // Std Dev for Sharpe
+                const dailyMap = {};
+                subTrades.forEach(t => {
+                    let d = null;
+                    if (t.timestamp) d = new Date(t.timestamp).toISOString().split('T')[0];
+                    if (d) dailyMap[d] = (dailyMap[d] || 0) + t.pnl;
+                });
+                const dVals = Object.values(dailyMap);
+                let stdDev = 0, downDev = 0;
+                if (dVals.length > 1) {
+                    const mean = dVals.reduce((a, b) => a + b, 0) / dVals.length;
+                    stdDev = Math.sqrt(dVals.reduce((a, v) => a + Math.pow(v - mean, 2), 0) / dVals.length);
+                    const negVals = dVals.filter(v => v < 0);
+                    downDev = Math.sqrt(negVals.length > 0 ? negVals.reduce((a, v) => a + Math.pow(v, 2), 0) / dVals.length : 0);
+                }
+
+                let sharpe = null, sortino = null;
+                if (capital > 0 && dVals.length > 5) {
+                    const riskFreeDaily = 0.065 / 252;
+                    const meanDailyPct = (dVals.reduce((a, b) => a + b, 0) / dVals.length) / capital;
+                    const stdDevPct = stdDev / capital;
+                    if (stdDevPct > 0) sharpe = ((meanDailyPct - riskFreeDaily) / stdDevPct) * Math.sqrt(252);
+                    const downDevPct = downDev / capital;
+                    if (downDevPct > 0) sortino = ((meanDailyPct - riskFreeDaily) / downDevPct) * Math.sqrt(252);
+                }
+
+                // Max DD for Calmar
+                let peak = 0, run = 0, maxDD = 0;
+                subTrades.forEach(t => {
+                    run += t.pnl;
+                    if (run > peak) peak = run;
+                    const dd = run - peak;
+                    if (dd < maxDD) maxDD = dd;
+                });
+                let calmar = null;
+                if (cagr !== null && maxDD < 0 && capital > 0) {
+                    const mxDDPct = (Math.abs(maxDD) / capital) * 100;
+                    if (mxDDPct > 0) calmar = cagr / mxDDPct;
+                }
+
+                html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding:12px 16px; font-weight:600; color:var(--text-primary);">${r.inst}</td>
+                    <td class="text-right" style="padding:12px 16px;">${capital > 0 ? fmt(capital) : '--'}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${netPL >= 0 ? '#10b981' : '#ef4444'}; font-weight:700;">${fmt(netPL)}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${returnPct >= 0 ? '#10b981' : '#ef4444'};">${capital > 0 ? fmtPct(returnPct) : '--'}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${cagr >= 15 ? '#10b981' : (cagr >= 0 ? '#e2e8f0' : '#ef4444')};">${cagr !== null ? fmtPct(cagr) : '--'}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${pf >= 2 ? '#10b981' : '#e2e8f0'};">${pf.toFixed(2)}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${sharpe >= 2 ? '#10b981' : '#e2e8f0'};">${sharpe !== null ? sharpe.toFixed(2) : '--'}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${sortino >= 3 ? '#10b981' : '#e2e8f0'};">${sortino !== null ? sortino.toFixed(2) : '--'}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${calmar >= 3 ? '#10b981' : '#e2e8f0'};">${calmar !== null ? calmar.toFixed(2) : '--'}</td>
+                    <td class="text-right" style="padding:12px 16px; color:${winRate >= 50 ? '#38bdf8' : '#e2e8f0'};">${winRate.toFixed(1)}%</td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+
+            const modal = document.getElementById('strategyMetricsModal');
+            if (modal) {
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.classList.add('open');
+            }
+        }
+
+        function closeStrategyModal() {
+            const modal = document.getElementById('strategyMetricsModal');
+            if (modal) {
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.classList.remove('open');
+            }
+        }
+
+        // ============================================================
+        // PDF EXPORT
+        // ============================================================
+        function exportToPDF() {
+            const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+            const getT = (id) => { const el = document.getElementById(id); return el ? el.textContent.trim() : '--'; };
+
+            // Build the print page
+            const pdfDiv = document.getElementById('pdf-report-view') || (() => {
+                const d = document.createElement('div');
+                d.id = 'pdf-report-view';
+                document.body.appendChild(d);
+                return d;
+            })();
+
+            const now = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const capital = getDeployedCapital();
+            const capStr = capital > 0 ? fmt(capital) : 'Not Set';
+
+            const kpiCard = (label, val, color = '#1e293b') =>
+                `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-height:70px;">
+                    <div style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${label}</div>
+                    <div style="font-size:16px;font-weight:800;color:${color};line-height:1.2;">${val}</div>
+                </div>`;
+
+            // Existing KPI scrapes
+            const netPL = getT('totalNetProfit').split('\n')[0].trim();
+            const rtnPct = getT('totalReturnPctDisplay');
+            const cagrV = getT('cagrDisplay');
+            const pfV = getT('profitFactorDisplay');
+            const sharpeV = getT('sharpeDisplay');
+            const sortinoV = getT('sortinoDisplay');
+            const calmarV = getT('calmarDisplay');
+            const maxV = getT('maxDrawdown').replace(/<[^>]+>/g, '').trim();
+            const winR = getT('winRateDisplay');
+            const avgWin = getT('avgWinner').split('\n')[0].trim();
+            const avgLoss = getT('avgLoser').split('\n')[0].trim();
+            const stdD = getT('stdDevDisplay');
+
+            // New Metric extracts
+            const expV = getT('expectancyDisplay');
+            const payoffV = getT('payoffDisplay');
+            const consV = getT('consistencyDisplay');
+            const robV = getT('robustnessDisplay');
+            const soV = getT('standOverDDDisplay');
+
+            // Colors
+            const pfColor = parseFloat(pfV) >= 2 ? '#10b981' : (parseFloat(pfV) >= 1 ? '#0ea5e9' : '#ef4444');
+            const retColor = rtnPct.startsWith('+') ? '#10b981' : '#ef4444';
+            const sharpeColor = parseFloat(sharpeV) >= 2 ? '#10b981' : (parseFloat(sharpeV) >= 1 ? '#0ea5e9' : '#ef4444');
+            const expColor = expV.startsWith('-') ? '#ef4444' : '#10b981';
+
+            pdfDiv.innerHTML = `
+            <style>
+                @media print {
+                    body > *:not(#pdf-report-view) { display: none !important; }
+                    html, body {
+                        background: white !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        min-height: auto !important;
+                    }
+                    @page { size: A4 portrait; margin: 0; }
+                }
+                .pdf-grid-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+                .pdf-grid-row.cols-6 { grid-template-columns: repeat(6, 1fr); }
+            </style>
+            <div class="pdf-page" style="font-family:'Inter',sans-serif;width:210mm;height:296mm;margin:0 auto;padding:15mm;background:#fff;color:#1e293b;box-sizing:border-box;overflow:hidden;page-break-inside:avoid;">
+                
+                <!-- Header -->
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #6366f1;padding-bottom:12px;margin-bottom:24px;">
+                    <div>
+                        <div style="font-size:24px;font-weight:900;color:#6366f1;letter-spacing:-0.02em;">FiFto Strategy Report</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:4px;">Backtest Performance Summary &nbsp;|&nbsp; Generated: ${now}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:700;">Deployed Capital</div>
+                        <div style="font-size:18px;font-weight:800;color:#1e293b;">${capStr}</div>
+                    </div>
+                </div>
+
+                <!-- KPI Row -->
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Returns &amp; Profitability</div>
+                <div class="pdf-grid-row">
+                    ${kpiCard('Net Profit', netPL, parseFloat(netPL.replace(/[₹,]/g, '')) >= 0 ? '#10b981' : '#ef4444')}
+                    ${kpiCard('Total Return', rtnPct, retColor)}
+                    ${kpiCard('CAGR', cagrV, retColor)}
+                    ${kpiCard('Profit Factor', pfV, pfColor)}
+                    ${kpiCard('Expectancy', expV, expColor)}
+                </div>
+
+                <!-- Risk Row -->
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#f59e0b;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Risk &amp; Drawdown Metrics</div>
+                <div class="pdf-grid-row cols-6">
+                    ${kpiCard('Sharpe Ratio', sharpeV, sharpeColor)}
+                    ${kpiCard('Sortino Ratio', sortinoV, parseFloat(sortinoV) >= 3 ? '#10b981' : parseFloat(sortinoV) >= 1.5 ? '#0ea5e9' : '#ef4444')}
+                    ${kpiCard('Calmar Ratio', calmarV, parseFloat(calmarV) >= 3 ? '#10b981' : parseFloat(calmarV) >= 1 ? '#0ea5e9' : '#ef4444')}
+                    ${kpiCard('Max Drawdown', maxV.split(' ')[0], '#ef4444')}
+                    ${kpiCard('Stand-over DD', soV, '#ef4444')}
+                    ${kpiCard('Std Dev/Day', stdD, '#64748b')}
+                </div>
+
+                <!-- Edge & Consistency Row -->
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#8b5cf6;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Edge &amp; Consistency</div>
+                <div class="pdf-grid-row">
+                    ${kpiCard('Win Rate', winR, '#6366f1')}
+                    ${kpiCard('Payoff Ratio', payoffV, parseFloat(payoffV) >= 1.5 ? '#10b981' : '#ef4444')}
+                    ${kpiCard('Robustness', robV.split(' ')[0], parseFloat(robV) >= 1.2 ? '#10b981' : '#ef4444')}
+                    ${kpiCard('Consist.(Mo/Yr)', consV.replace(/ /g, ''), '#6366f1')}
+                    ${kpiCard('Total Trades', getT('totalTrades'), '#1e293b')}
+                </div>
+
+                <!-- Trade Stats Row -->
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#10b981;margin-bottom:8px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Trade Statistics</div>
+                <div class="pdf-grid-row">
+                    ${kpiCard('Avg Win', avgWin.split('(')[0].trim(), '#10b981')}
+                    ${kpiCard('Avg Loss', avgLoss.split('(')[0].trim(), '#ef4444')}
+                    ${kpiCard('Best Streak', getT('maxWinStreak').replace(/\D+/g, ' ').trim(), '#10b981')}
+                    ${kpiCard('Worst Streak', getT('maxLoseStreak').replace(/\D+/g, ' ').trim(), '#ef4444')}
+                    ${kpiCard('Best Win', getT('maxSingleProfitDisplay').trim(), '#10b981')}
+                </div>
+
+                <!-- Footer -->
+                <div style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">
+                    <span>FiFto Mechanism Backtesting Dashboard</span>
+                    <span>⚠ For internal analysis only. Past performance does not guarantee future results.</span>
+                </div>
+                <div style="margin-top:15px;text-align:center;font-size:8px;color:#cbd5e1;letter-spacing:0.05em;">Powered by Anti-Gravity Gemini</div>
+            </div>`;
+
+            window.print();
         }
 
         // --- Library Logic ---
@@ -3901,15 +5213,22 @@
             let labels = [];
             let equityData = [];
             let pnlData = [];
+            let ddData = []; // Underwater Drawdown
 
             // For coloring bars
             let barColors = [];
 
             if (mode === 'daily') {
                 let run = 0;
+                let peak = 0;
                 labels = trades.map(t => t.dateStr);
                 pnlData = trades.map(t => t.pnl);
-                equityData = trades.map(t => { run += t.pnl; return run; });
+                trades.forEach(t => {
+                    run += t.pnl;
+                    if (run > peak) peak = run;
+                    equityData.push(run);
+                    ddData.push(run - peak); // Negative value from peak
+                });
                 barColors = trades.map(t => t.pnl >= 0 ? '#22c55e' : '#ef4444');
             } else {
                 // Monthly Aggregation
@@ -3922,10 +5241,13 @@
                 const months = Object.keys(monthlyMap).sort();
                 labels = months;
                 let run = 0;
+                let peak = 0;
                 months.forEach(m => {
                     const p = monthlyMap[m];
                     run += p; // equity is cumulative
+                    if (run > peak) peak = run;
                     equityData.push(run);
+                    ddData.push(run - peak);
                     pnlData.push(p);
                     barColors.push(p >= 0 ? '#22c55e' : '#ef4444');
                 });
@@ -3958,6 +5280,18 @@
                             categoryPercentage: 0.8,
                             yAxisID: 'y1',
                             order: 2
+                        },
+                        {
+                            label: 'Drawdown',
+                            data: ddData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            borderWidth: 1,
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            yAxisID: 'y', // Share axis with Equity for visual scale
+                            order: 3
                         }
                     ]
                 },
@@ -5371,6 +6705,211 @@
             bodyEl.innerHTML = bodyHtml;
         }
 
+        function renderEfficiencyTab(trades) {
+            const container = document.getElementById('efficiency-table-body');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (trades.length === 0) {
+                const ratioDisplay = document.getElementById('efficiencyRatioDisplay');
+                const netProfit = document.getElementById('efficiencyNetProfit');
+                const maxDD = document.getElementById('efficiencyMaxDD');
+                if (ratioDisplay) ratioDisplay.textContent = '--';
+                if (netProfit) netProfit.textContent = '--';
+                if (maxDD) maxDD.textContent = '--';
+                return;
+            }
+
+            // Global Metrics Calculation
+            let totalNetPL = trades.reduce((acc, t) => acc + t.pnl, 0);
+            let peak = 0, running = 0, maxDD = 0;
+            const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+            sortedTrades.forEach(t => {
+                if (t.fileDrawdown !== undefined) {
+                    const intraDip = (running + t.fileDrawdown) - peak;
+                    if (intraDip < maxDD) maxDD = intraDip;
+                }
+                running += t.pnl;
+                if (running > peak) peak = running;
+                const dd = running - peak;
+                if (dd < maxDD) maxDD = dd;
+            });
+            const absMaxDD = Math.abs(maxDD);
+            const efficiencyRatio = absMaxDD > 0.1 ? (totalNetPL / absMaxDD).toFixed(2) : (totalNetPL > 0 ? 'High' : '0.00');
+
+            const ratioEl = document.getElementById('efficiencyRatioDisplay');
+            if (ratioEl) {
+                ratioEl.textContent = efficiencyRatio;
+                ratioEl.className = `stats-card-value ${parseFloat(efficiencyRatio) >= 1 ? 'text-green' : (parseFloat(efficiencyRatio) > 0 ? 'text-primary' : 'text-red')}`;
+            }
+            const netEl = document.getElementById('efficiencyNetProfit');
+            if (netEl) {
+                netEl.textContent = fmtMoney(totalNetPL);
+                netEl.className = `stats-card-value ${totalNetPL >= 0 ? 'text-green' : 'text-red'}`;
+            }
+            const ddEl = document.getElementById('efficiencyMaxDD');
+            if (ddEl) ddEl.textContent = fmtMoney(maxDD);
+
+            // Per File Stats (Top Table)
+            const fileMapGlobal = {};
+            trades.forEach(t => {
+                const file = t.sourceFile || 'Unknown';
+                if (!fileMapGlobal[file]) fileMapGlobal[file] = { pnl: 0, trades: [] };
+                fileMapGlobal[file].pnl += t.pnl;
+                fileMapGlobal[file].trades.push(t);
+            });
+            const fileStats = Object.keys(fileMapGlobal).map(filename => {
+                const data = fileMapGlobal[filename];
+                let fPeak = 0, fRunning = 0, fMaxClosedDD = 0, fMaxIntraDD = 0;
+                data.trades.sort((a, b) => a.timestamp - b.timestamp).forEach(t => {
+                    if (t.fileDrawdown !== undefined) {
+                        const intraDip = (fRunning + t.fileDrawdown) - fPeak;
+                        if (intraDip < fMaxIntraDD) fMaxIntraDD = intraDip;
+                    }
+                    fRunning += t.pnl;
+                    if (fRunning > fPeak) fPeak = fRunning;
+                    const closedDD = fRunning - fPeak;
+                    if (closedDD < fMaxClosedDD) fMaxClosedDD = closedDD;
+                    if (fMaxClosedDD < fMaxIntraDD) fMaxIntraDD = fMaxClosedDD;
+                });
+                const fAbsMaxDD = Math.abs(fMaxIntraDD);
+                const ratio = fAbsMaxDD > 0.1 ? (data.pnl / fAbsMaxDD) : (data.pnl > 0 ? 999 : 0);
+                return { filename, pnl: data.pnl, closedDD: fMaxClosedDD, intraDD: fMaxIntraDD, ratio };
+            });
+            fileStats.sort((a, b) => b.ratio - a.ratio).forEach((stat, i) => {
+                const tr = document.createElement('tr');
+                const ratioDisplay = stat.ratio === 999 ? 'High' : stat.ratio.toFixed(2);
+                tr.innerHTML = `
+                    <td class="col-rank">${i + 1}</td>
+                    <td style="font-weight: 500;">${stat.filename}</td>
+                    <td class="text-right ${stat.pnl >= 0 ? 'text-green' : 'text-red'}" style="font-weight: 600;">${fmtMoney(stat.pnl)}</td>
+                    <td class="text-right text-red-muted">${fmtMoney(stat.closedDD)}</td>
+                    <td class="text-right text-red" style="font-weight: 600;">${fmtMoney(stat.intraDD)}</td>
+                    <td class="text-right" style="font-weight: 700; color: ${stat.ratio >= 1 ? 'var(--success-color)' : (stat.ratio > 0 ? 'var(--text-primary)' : 'var(--error-color)')}">${ratioDisplay}</td>
+                `;
+                container.appendChild(tr);
+            });
+
+            // Efficiency Matrix
+            const matrixHead = document.getElementById('efficiency-matrix-head');
+            const matrixBody = document.getElementById('efficiency-matrix-body');
+            if (matrixHead && matrixBody) {
+                matrixHead.innerHTML = ''; matrixBody.innerHTML = '';
+                const years = Array.from(new Set(trades.filter(t => t.daily).map(t => t.daily.substring(0, 4)))).sort().reverse();
+                if (years.length > 0) {
+                    const hTr = document.createElement('tr');
+                    hTr.innerHTML = '<th>Strategy / File Name</th>';
+                    years.forEach(y => { hTr.innerHTML += `<th class="text-right">${y} ER</th>`; });
+                    hTr.innerHTML += '<th class="text-right">Combined ER</th>';
+                    matrixHead.appendChild(hTr);
+                    Object.keys(fileMapGlobal).sort().forEach(file => {
+                        const bTr = document.createElement('tr');
+                        bTr.innerHTML = `<td style="font-weight:600; font-size:0.85em; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${file}">${file}</td>`;
+                        years.forEach(year => {
+                            const yearTrades = fileMapGlobal[file].trades.filter(t => t.daily && t.daily.startsWith(year));
+                            let pnl = 0, peak = 0, running = 0, maxDD = 0;
+                            yearTrades.sort((a, b) => a.timestamp - b.timestamp).forEach(t => {
+                                if (t.fileDrawdown !== undefined) {
+                                    const intraDip = (running + t.fileDrawdown) - peak;
+                                    if (intraDip < maxDD) maxDD = intraDip;
+                                }
+                                pnl += t.pnl; running += t.pnl;
+                                if (running > peak) peak = running;
+                                const dd = running - peak;
+                                if (dd < maxDD) maxDD = dd;
+                            });
+                            if (yearTrades.length === 0) bTr.innerHTML += `<td class="text-right" style="opacity:0.3;">--</td>`;
+                            else {
+                                const ratio = Math.abs(maxDD) > 0.1 ? (pnl / Math.abs(maxDD)).toFixed(2) : (pnl > 0 ? 'High' : '0.00');
+                                const color = parseFloat(ratio) >= 1 ? 'var(--success-color)' : (parseFloat(ratio) > 0 ? 'var(--text-primary)' : 'var(--error-color)');
+                                bTr.innerHTML += `<td class="text-right" style="font-weight:700; color:${color}">${ratio}</td>`;
+                            }
+                        });
+                        const combinedFileStats = fileStats.find(s => s.filename === file);
+                        bTr.innerHTML += `<td class="text-right" style="font-weight:800; border-left:1px solid rgba(255,255,255,0.05);">${combinedFileStats.ratio === 999 ? 'High' : combinedFileStats.ratio.toFixed(2)}</td>`;
+                        matrixBody.appendChild(bTr);
+                    });
+                }
+            }
+
+            // Accordion Yearly Breakdown
+            const yearContainer = document.getElementById('efficiency-year-table-body');
+            if (yearContainer) {
+                yearContainer.innerHTML = '';
+                const yearMap = {};
+                trades.forEach(t => {
+                    const date = t.daily || '';
+                    const year = date.substring(0, 4) || 'Unknown';
+                    const filename = t.sourceFile || 'Unknown';
+                    if (!yearMap[year]) yearMap[year] = { pnl: 0, trades: [], files: {} };
+                    yearMap[year].pnl += t.pnl;
+                    yearMap[year].trades.push(t);
+                    if (!yearMap[year].files[filename]) yearMap[year].files[filename] = { pnl: 0, trades: [] };
+                    yearMap[year].files[filename].pnl += t.pnl;
+                    yearMap[year].files[filename].trades.push(t);
+                });
+                const sortedYears = Object.keys(yearMap).filter(y => y !== 'Unknown').sort().reverse();
+                sortedYears.forEach((year, i) => {
+                    const yearData = yearMap[year];
+                    let yPeak = 0, yRunning = 0, yMaxClosedDD = 0, yMaxIntraDD = 0;
+                    yearData.trades.sort((a, b) => a.timestamp - b.timestamp).forEach(t => {
+                        if (t.fileDrawdown !== undefined) {
+                            const intraDip = (yRunning + t.fileDrawdown) - yPeak;
+                            if (intraDip < yMaxIntraDD) yMaxIntraDD = intraDip;
+                        }
+                        yRunning += t.pnl;
+                        if (yRunning > yPeak) yPeak = yRunning;
+                        const closedDD = yRunning - yPeak;
+                        if (closedDD < yMaxClosedDD) yMaxClosedDD = closedDD;
+                        if (yMaxClosedDD < yMaxIntraDD) yMaxIntraDD = yMaxClosedDD;
+                    });
+                    const yAbsMaxDD = Math.abs(yMaxIntraDD);
+                    const yRatioTotal = yAbsMaxDD > 0.1 ? (yearData.pnl / yAbsMaxDD) : (yearData.pnl > 0 ? 999 : 0);
+                    const yRatioDisplay = yRatioTotal === 999 ? 'High' : yRatioTotal.toFixed(2);
+                    const trYear = document.createElement('tr');
+                    trYear.style.cssText = 'background: rgba(255,255,255,0.03); font-weight: 700; cursor: pointer; border-bottom: 2px solid var(--border-color);';
+                    trYear.onclick = () => toggleEffYear(year);
+                    trYear.innerHTML = `<td class="col-rank">${i + 1}</td><td style="display:flex; align-items:center; gap:8px;"><span id="eff-icon-${year}" style="width:12px; font-size:0.8rem;">&#9654;</span><span>${year}</span><span style="font-size:0.75rem; opacity:0.6; font-weight:400;">(${yearData.trades.length} trades)</span></td><td class="text-right ${yearData.pnl >= 0 ? 'text-green' : 'text-red'}" style="font-weight:700;">${fmtMoney(yearData.pnl)}</td><td class="text-right text-red-muted" style="opacity:0.7;">${fmtMoney(yMaxClosedDD)}</td><td class="text-right text-red" style="font-weight:700;">${fmtMoney(yMaxIntraDD)}</td><td class="text-right" style="font-weight:800; color:${yRatioTotal >= 1 ? 'var(--success-color)' : (yRatioTotal > 0 ? 'var(--text-primary)' : 'var(--error-color)')}">${yRatioDisplay}</td>`;
+                    yearContainer.appendChild(trYear);
+                    const files = yearData.files;
+                    Object.keys(files).sort().reverse().forEach(filename => {
+                        const fileData = files[filename];
+                        let fPeak = 0, fRunning = 0, fMaxClosedDD = 0, fMaxIntraDD = 0;
+                        fileData.trades.sort((a, b) => a.timestamp - b.timestamp).forEach(t => {
+                            if (t.fileDrawdown !== undefined) {
+                                const intraDip = (fRunning + t.fileDrawdown) - fPeak;
+                                if (intraDip < fMaxIntraDD) fMaxIntraDD = intraDip;
+                            }
+                            fRunning += t.pnl;
+                            if (fRunning > fPeak) fPeak = fRunning;
+                            const closedDD = fRunning - fPeak;
+                            if (closedDD < fMaxClosedDD) fMaxClosedDD = closedDD;
+                            if (fMaxClosedDD < fMaxIntraDD) fMaxIntraDD = fMaxClosedDD;
+                        });
+                        const fAbsMaxDD = Math.abs(fMaxIntraDD);
+                        const fRatio = fAbsMaxDD > 0.1 ? (fileData.pnl / fAbsMaxDD) : (fileData.pnl > 0 ? 999 : 0);
+                        const fRatioDisplay = fRatio === 999 ? 'High' : fRatio.toFixed(2);
+                        const trFile = document.createElement('tr');
+                        trFile.className = `eff-year-row-${year}`;
+                        trFile.style.cssText = 'display: none; background: #0f172a; font-size: 0.9em;';
+                        trFile.innerHTML = `<td></td><td style="padding-left: 30px; color: var(--text-secondary); border-left: 2px solid var(--accent-color);">${filename}</td><td class="text-right ${fileData.pnl >= 0 ? 'text-green' : 'text-red'}" style="opacity: 0.9;">${fmtMoney(fileData.pnl)}</td><td class="text-right text-red-muted" style="opacity: 0.6;">${fmtMoney(fMaxClosedDD)}</td><td class="text-right text-red" style="opacity: 0.9;">${fmtMoney(fMaxIntraDD)}</td><td class="text-right" style="font-weight: 600; color: ${fRatio >= 1 ? 'var(--success-color)' : (fRatio > 0 ? 'var(--text-primary)' : 'var(--error-color)')}">${fRatioDisplay}</td>`;
+                        yearContainer.appendChild(trFile);
+                    });
+                });
+            }
+        }
+
+        function toggleEffYear(val) {
+            const rows = document.querySelectorAll(`.eff-year-row-${val}`);
+            const icon = document.getElementById(`eff-icon-${val}`);
+            let show = false;
+            if (rows.length > 0 && (rows[0].style.display === 'none' || rows[0].style.display === '')) {
+                show = true;
+            }
+            rows.forEach(r => { r.style.display = show ? 'table-row' : 'none'; });
+            if (icon) icon.innerHTML = show ? '&#9660;' : '&#9654;';
+        }
+
         function calculateDrawdownHit() {
             const val = document.getElementById('drawdownTargetInput').value;
             const resEl = document.getElementById('drawdownTargetResult');
@@ -5416,6 +6955,38 @@
             }
         });
     </script>
+    <!-- STRATEGY (FILE) LEVEL DRILL-DOWN MODAL -->
+    <div id="strategyMetricsModal" class="strategy-modal-backdrop">
+        <div class="strategy-modal">
+            <div class="strategy-modal-header">
+                <div class="strategy-modal-title">Per-Strategy Metrics Breakdown</div>
+                <button class="strategy-modal-close" onclick="closeStrategyModal()">&times;</button>
+            </div>
+            <div class="strategy-modal-body">
+                <div class="table-container" style="max-height: 60vh; overflow-y: auto;">
+                    <table class="strategy-table">
+                        <thead>
+                            <tr>
+                                <th>Strategy File</th>
+                                <th class="text-right">Capital</th>
+                                <th class="text-right">Net P&amp;L</th>
+                                <th class="text-right">Return %</th>
+                                <th class="text-right">CAGR</th>
+                                <th class="text-right">Pf. Factor</th>
+                                <th class="text-right">Sharpe</th>
+                                <th class="text-right">Sortino</th>
+                                <th class="text-right">Calmar</th>
+                                <th class="text-right">Win %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="strategyMetricsTableBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

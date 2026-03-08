@@ -29,6 +29,13 @@
     padding: 2rem;
 }
 
+/* Fix for native select dropdown options appearing white on white */
+.pnl-theme-wrapper select,
+.pnl-theme-wrapper select option {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+}
+
 .pnl-theme-wrapper .pnl-container {
     width: 100%;
     max-width: 98%;
